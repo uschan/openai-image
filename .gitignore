@@ -1,0 +1,9 @@
+node_modules/
+dist/
+downloads/
+.env
+images.json
+categories.json
+templates.json
+stats.json
+data.json
