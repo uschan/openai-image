@@ -31,7 +31,7 @@ export function RightSidebar({
 }: RightSidebarProps) {
   return (
     <aside className="hidden lg:flex w-80 border-l border-white/10 bg-editorial-850 flex-col overflow-y-auto custom-scrollbar select-none shrink-0">
-      <div className="p-8 space-y-10">
+      <div className="p-4 space-y-8">
         {/* Subject */}
         <section>
           <div className="flex items-center justify-between mb-4">
@@ -49,7 +49,7 @@ export function RightSidebar({
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Ex: Ghost Mantis..."
-            className="w-full bg-editorial-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-white focus:border-accent/40 focus:ring-0 transition-all placeholder:text-white/10"
+            className="w-full bg-editorial-900/50 border border-white/5 rounded-lg px-4 py-3 text-sm font-bold text-white focus:border-accent/40 focus:ring-0 transition-all placeholder:text-white/10"
           />
         </section>
 
@@ -64,14 +64,14 @@ export function RightSidebar({
             value={promptTemplate}
             onChange={(e) => setPromptTemplate(e.target.value)}
             placeholder="Use {SUBJECT} variable..."
-            className="w-full bg-editorial-900/50 border border-white/5 rounded-xl p-3 text-xs font-mono text-white/60 focus:border-accent/20 focus:ring-0 resize-y min-h-[4rem] max-h-64 transition-shadow custom-scrollbar"
+            className="w-full bg-editorial-900/50 border border-white/5 rounded-lg p-3 text-xs font-mono text-white/60 focus:border-accent/20 focus:ring-0 resize-y min-h-[4rem] max-h-64 transition-shadow custom-scrollbar"
           />
         </section>
 
         {/* Preview */}
         <section>
           <label className="label-caps mb-4 block">Realized Prompt</label>
-          <div className="w-full bg-black/20 rounded-xl p-4 text-[11px] font-medium leading-relaxed italic text-white/30 border border-white/5 max-h-24 overflow-y-auto custom-scrollbar">
+          <div className="w-full bg-black/20 rounded-lg p-4 text-[11px] font-medium leading-relaxed italic text-white/30 border border-white/5 max-h-24 overflow-y-auto custom-scrollbar">
             {finalPrompt || <span className="opacity-50">Empty...</span>}
           </div>
         </section>
@@ -100,7 +100,7 @@ export function RightSidebar({
         <button
           onClick={generateImage}
           disabled={!subject}
-          className="w-full py-4 bg-accent text-editorial-950 rounded-xl font-black text-[11px] uppercase tracking-[0.3em] hover:scale-[0.98] active:scale-95 transition-all shadow-[0_0_40px_rgba(0,240,255,0.2)] disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-full py-4 bg-accent text-editorial-950 rounded-lg font-black text-[11px] uppercase tracking-[0.3em] hover:scale-[0.98] active:scale-95 transition-all shadow-[0_0_40px_rgba(0,240,255,0.2)] disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <div className="flex items-center justify-center gap-3">Synthesize Output <Zap className="w-4 h-4 fill-editorial-950" /></div>
         </button>
@@ -111,7 +111,7 @@ export function RightSidebar({
           <select
             value={activeModel}
             onChange={(e) => setActiveModel(e.target.value)}
-            className="w-full bg-editorial-900/50 border border-white/5 rounded-xl px-4 py-3 text-[10px] font-black text-white/80 uppercase tracking-widest outline-none focus:border-accent/40 cursor-pointer"
+            className="w-full bg-editorial-900/50 border border-white/5 rounded-lg px-4 py-3 text-[10px] font-black text-white/80 uppercase tracking-widest outline-none focus:border-accent/40 cursor-pointer"
           >
             <option value="GPT-IMAGE">GPT-IMAGE</option>
             <option value="GEMINI">GEMINI (Banana)</option>
@@ -125,7 +125,7 @@ export function RightSidebar({
             <div className="grid grid-cols-2 gap-2">
               {['1:1', '4:3', '3:4', '16:9', '9:16', '4:5', '2:3', '3:2'].map(ratio => (
                 <button key={ratio} onClick={() => setAspectRatio(ratio)}
-                  className={`h-10 rounded-lg border flex items-center justify-center transition-all ${aspectRatio === ratio ? 'border-accent bg-accent/5 text-accent font-black' : 'border-white/5 text-white/20 hover:border-white/20 hover:text-white'}`}>
+                  className={`h-8 rounded-lg border flex items-center justify-center transition-all ${aspectRatio === ratio ? 'border-accent bg-accent/5 text-accent font-black' : 'border-white/5 text-white/20 hover:border-white/20 hover:text-white'}`}>
                   <span className="text-[8px] uppercase">{ratio}</span>
                 </button>
               ))}
@@ -136,7 +136,7 @@ export function RightSidebar({
             <div className="grid grid-cols-2 gap-2">
               {['1k', '2k', '4k'].map(res => (
                 <button key={res} onClick={() => setResolution(res)}
-                  className={`h-10 rounded-lg border flex items-center justify-center transition-all ${resolution === res ? 'border-white bg-white text-editorial-950 font-black' : 'border-white/5 text-white/20 hover:border-white/20 hover:text-white'}`}>
+                  className={`h-8 rounded-lg border flex items-center justify-center transition-all ${resolution === res ? 'border-white bg-white text-editorial-950 font-black' : 'border-white/5 text-white/20 hover:border-white/20 hover:text-white'}`}>
                   <span className="text-[8px] uppercase">{res}</span>
                 </button>
               ))}
