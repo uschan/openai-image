@@ -154,7 +154,7 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selec
             {image.subject || "Untitled Synthesis"}
           </h4>
           <span className="text-[10px] font-mono text-white/20 whitespace-nowrap">
-            {new Date(image.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(image.timestamp).toLocaleDateString([], { month: '2-digit', day: '2-digit' })}
           </span>
         </div>
         

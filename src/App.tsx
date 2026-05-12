@@ -3,7 +3,7 @@ import { Layers, Image as ImageIcon, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
-  DragOverlay, defaultDropAnimationSideEffects, DragStartEvent, DragEndEvent, DragOverEvent,
+  DragOverlay, defaultDropAnimationSideEffects, DragStartEvent, DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { Template, GeneratedImage, Category } from './types';
@@ -48,6 +48,16 @@ export default function App() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState("");
+  const [sessionStart] = useState(Date.now());
+  const [sessionTime, setSessionTime] = useState("00:00:00");
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      const d = Math.floor((Date.now() - sessionStart) / 1000);
+      setSessionTime(`${String(Math.floor(d/3600)).padStart(2,'0')}:${String(Math.floor(d/60)%60).padStart(2,'0')}:${String(d%60).padStart(2,'0')}`);
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
 
   const showError = (msg: string) => { setErrorMessage(msg); setTimeout(() => setErrorMessage(""), 5000); };
 
@@ -85,7 +95,7 @@ export default function App() {
               try {
                 const sr = await fetch("/api/save-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: img.id, url: img.url, subject: img.subject }) });
                 const sd = await sr.json();
-                if (sd.localUrl) setImages(prev => prev.map(i => i.id === img.id ? { ...i, localUrl: sd.localUrl } : i));
+                if (sd.localUrl) setImages(prev => prev.map(i => i.id === img.id ? { ...i, localUrl: sd.localUrl, isSaved: true } : i));
               } catch {}
             }
           }
@@ -225,7 +235,7 @@ export default function App() {
             if (url) {
               let localUrl = "";
               try { const sr = await fetch("/api/save-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: internalId, url, subject }) }); const sd = await sr.json(); localUrl = sd.localUrl || ""; } catch {}
-              setImages(prev => prev.map(img => img.id === internalId ? { ...img, status: 'completed', url, localUrl } : img));
+              setImages(prev => prev.map(img => img.id === internalId ? { ...img, status: 'completed', url, localUrl, isSaved: true } : img));
               setIsGenerating(false);
               setGenerationStats(prev => ({ ...prev, successful: prev.successful + 1 }));
               return true;
@@ -245,10 +255,17 @@ export default function App() {
     } catch (e: any) { showError(e.message); setIsGenerating(false); setGenerationStats(prev => ({ ...prev, failed: prev.failed + 1 })); }
   };
 
+  const handleExport = () => {
+    const data = { templates, categories: categories.filter(c => c.id !== 'all' && c.id !== 'uncategorized'), exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `wildsalt-export-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  };
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragOver={() => {}} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className={`flex flex-col h-screen h-full w-full overflow-hidden bg-editorial-950 transition-all duration-700 ${theme === 'light' ? 'invert hue-rotate-180' : ''}`}>
 
         <AnimatePresence>
@@ -260,7 +277,7 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <Header apiHealth={apiHealth} activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} setTheme={setTheme} />
+        <Header apiHealth={apiHealth} activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} setTheme={setTheme} onExport={handleExport} />
 
         <div className="flex-1 flex overflow-hidden">
           {(activeTab === 'workspace' || activeTab === 'assets') && (
@@ -307,7 +324,7 @@ export default function App() {
         </div>
 
         <footer className="h-8 bg-black border-t border-white/10 flex items-center px-6 justify-between text-[9px] font-bold uppercase tracking-[0.2em] text-white/20">
-          <div className="flex gap-8"><span>Active Session: 01:22:45</span><span>Buffer Health: 100%</span></div>
+          <div className="flex gap-8"><span>Active Session: {sessionTime}</span><span>Buffer Health: 100%</span></div>
           <div className="flex gap-6 items-center">
             <div className="flex items-center gap-1.5"><div className="w-1 h-1 bg-green-500 rounded-full shadow-[0_0_5px_rgba(34,197,94,1)] animate-pulse" />Synchronized</div>
             <span>WildSalt v1.0-beta</span>

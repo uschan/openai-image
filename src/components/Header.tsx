@@ -6,9 +6,10 @@ interface HeaderProps {
   setActiveTab: (tab: 'workspace' | 'assets' | 'models' | 'history') => void;
   theme: string;
   setTheme: (t: 'dark' | 'light') => void;
+  onExport: () => void;
 }
 
-export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme }: HeaderProps) {
+export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme, onExport }: HeaderProps) {
   return (
     <header className="h-14 border-b border-white/10 flex items-center justify-between px-6 bg-editorial-900 z-30">
       <div className="flex items-center gap-10">
@@ -45,7 +46,7 @@ export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme }: 
         <button className="p-2 text-white/40 opacity-50 cursor-not-allowed rounded-full" title="Cloud Sync (Coming soon)">
           <Cloud className="w-4 h-4" />
         </button>
-        <button className="px-5 py-1.5 bg-white text-black text-[10px] font-black rounded-full uppercase tracking-widest hover:bg-neutral-200 transition-colors flex items-center gap-2">
+        <button onClick={onExport} className="px-5 py-1.5 bg-white text-black text-[10px] font-black rounded-full uppercase tracking-widest hover:bg-neutral-200 transition-colors flex items-center gap-2">
           <Download className="w-3 h-3" /> Export
         </button>
       </div>
