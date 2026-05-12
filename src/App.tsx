@@ -105,6 +105,8 @@ export default function App() {
   const [apiHealth, setApiHealth] = useState({ gemini: false, apimart: false, deepseek: false });
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState("");
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -699,6 +701,54 @@ export default function App() {
                 </div>
               )}
 
+              {/* Batch toolbar */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => { setSelectMode(!selectMode); setSelectedIds(new Set()); }}
+                  className={`text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${selectMode ? 'bg-accent/20 border-accent text-accent' : 'border-white/10 text-white/30 hover:text-white hover:border-white/30'}`}
+                >
+                  {selectMode ? 'Exit Select' : 'Select Mode'}
+                </button>
+                {selectMode && selectedIds.size > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/50">{selectedIds.size} selected</span>
+                    <select
+                      onChange={async (e) => {
+                        const catId = e.target.value;
+                        if (!catId) return;
+                        e.target.value = "";
+                        for (const id of selectedIds) {
+                          const img = images.find(i => i.id === id);
+                          if (img) {
+                            setImages(prev => prev.map(i => i.id === id ? { ...i, categoryId: catId } : i));
+                            if (img.localUrl) {
+                              try {
+                                const res = await fetch("/api/move-image", {
+                                  method: "POST", headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ localUrl: img.localUrl, categoryId: catId }),
+                                });
+                                const data = await res.json();
+                                if (data.localUrl) {
+                                  setImages(prev => prev.map(i => i.id === id ? { ...i, localUrl: data.localUrl } : i));
+                                }
+                              } catch {}
+                            }
+                          }
+                        }
+                        setSelectedIds(new Set());
+                      }}
+                      className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-white"
+                    >
+                      <option value="">Move to...</option>
+                      {categories.filter(c => c.id !== 'all' && c.id !== 'uncategorized').map(c => (
+                        <option key={c.id} value={c.id} className="text-black">{c.name}</option>
+                      ))}
+                    </select>
+                    <button onClick={() => setSelectedIds(new Set())} className="text-xs text-white/40 hover:text-white">Clear</button>
+                  </div>
+                )}
+              </div>
+
               {/* Discovery Grid */}
               <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
                 <AnimatePresence mode="popLayout">
@@ -718,6 +768,15 @@ export default function App() {
                       categoryName={categories.find(c => c.id === image.categoryId)?.name}
                       onDelete={handleDeleteImage}
                       onGeneratePost={handleGeneratePost}
+                      selectMode={selectMode}
+                      isSelected={selectedIds.has(image.id)}
+                      onToggleSelect={() => {
+                        setSelectedIds(prev => {
+                          const next = new Set(prev);
+                          if (next.has(image.id)) next.delete(image.id); else next.add(image.id);
+                          return next;
+                        });
+                      }}
                     />
                   ))}
                 </AnimatePresence>

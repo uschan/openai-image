@@ -8,7 +8,8 @@ import {
   Sparkles,
   RefreshCw,
   ExternalLink,
-  GripVertical
+  GripVertical,
+  CheckCircle2
 } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -20,9 +21,12 @@ export interface ImageCardProps {
   categoryName?: string;
   onDelete: (id: string) => void;
   onGeneratePost: (id: string, prompt: string) => void;
+  selectMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export function ImageCard({ image, categoryName, onDelete, onGeneratePost }: ImageCardProps) {
+export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect }: ImageCardProps) {
   const {
     attributes,
     listeners,
@@ -31,7 +35,8 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost }: Ima
     isDragging
   } = useDraggable({ 
     id: image.id,
-    data: { type: 'image', categoryId: image.categoryId }
+    data: { type: 'image', categoryId: image.categoryId },
+    disabled: selectMode,
   });
 
   const style = {
@@ -61,8 +66,16 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost }: Ima
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
-      className="group relative flex flex-col gap-4"
+      className={`group relative flex flex-col gap-4 ${selectMode ? 'cursor-pointer' : ''}`}
+      onClick={() => { if (selectMode && onToggleSelect) onToggleSelect(); }}
     >
+      {/* Selection overlay */}
+      {selectMode && (
+        <div className={`absolute inset-0 z-30 rounded-2xl border-2 pointer-events-none transition-colors ${isSelected ? 'border-accent bg-accent/10' : 'border-transparent group-hover:border-white/10'}`}>
+          {isSelected && <CheckCircle2 className="w-6 h-6 text-accent absolute top-3 right-3" />}
+        </div>
+      )}
+
       {/* Image Container with Drag Handle */}
       <div className="relative aspect-[3/4] rounded-2xl overflow-hidden glass border-white/10 group-hover:border-accent/40 shadow-2xl transition-all duration-700">
         <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
