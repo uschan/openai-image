@@ -252,6 +252,8 @@ export default function App() {
       setDragType('category');
     } else if (images.find(i => i.id === active.id)) {
       setDragType('image');
+    } else if (templates.find(t => t.id === active.id)) {
+      setDragType('template');
     }
   };
 
@@ -283,6 +285,14 @@ export default function App() {
     
     if (dragType === 'category' && over && active.id !== over.id) {
       setCategories((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+
+    if (dragType === 'template' && over && active.id !== over.id) {
+      setTemplates((items) => {
         const oldIndex = items.findIndex((i) => i.id === active.id);
         const newIndex = items.findIndex((i) => i.id === over.id);
         return arrayMove(items, oldIndex, newIndex);
@@ -357,6 +367,18 @@ export default function App() {
   };
 
   const handleDeleteImage = async (id: string) => {
+
+  // Keyboard shortcut: Ctrl+Enter to generate
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (subject && !isGenerating) generateImage();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [subject, isGenerating, finalPrompt, activeModel, aspectRatio, resolution]);
     const img = images.find(i => i.id === id);
     setImages(prev => prev.filter(i => i.id !== id));
     if (img?.localUrl) {
@@ -793,24 +815,21 @@ export default function App() {
               </div>
             </section>
 
-            {/* Quick Prompt Templates */}
+            {/* Quick Prompt Templates (draggable) */}
             <section>
               <label className="label-caps mb-4 block">Quick Templates</label>
               <div className="flex flex-col gap-2">
-                {templates.filter(t => t.isPinned !== false).length === 0 ? (
-                  <div className="text-[10px] text-white/30 text-center py-4 bg-white/[0.02] rounded-lg border border-white/5">
-                    No pinned templates. Manage templates to add quick blueprints.
-                  </div>
-                ) : templates.filter(t => t.isPinned !== false).map(tpl => (
-                  <button 
-                    key={tpl.id} 
-                    onClick={() => setPromptTemplate(tpl.content)}
-                    className="px-3 py-2.5 bg-white/[0.03] rounded-lg text-left border border-white/5 hover:border-accent/30 hover:bg-white/[0.05] transition-all group"
-                  >
-                    <div className="text-[10px] font-bold text-white/70 group-hover:text-accent mb-1">{tpl.name}</div>
-                    <div className="text-[9px] text-white/30 truncate">{tpl.content}</div>
-                  </button>
-                ))}
+              {templates.filter(t => t.isPinned !== false).length === 0 ? (
+                <div className="text-[10px] text-white/30 text-center py-4 bg-white/[0.02] rounded-lg border border-white/5">
+                  No pinned templates. Manage templates to add quick blueprints.
+                </div>
+              ) : (
+                <SortableContext items={templates.filter(t => t.isPinned !== false).map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  {templates.filter(t => t.isPinned !== false).map(tpl => (
+                    <SortableTemplateButton key={tpl.id} tpl={tpl} onClick={() => setPromptTemplate(tpl.content)} />
+                  ))}
+                </SortableContext>
+              )}
               </div>
             </section>
 
@@ -921,9 +940,29 @@ export default function App() {
           <div className="w-48 aspect-[3/4] bg-editorial-900 border border-accent/50 rounded-xl flex items-center justify-center">
              <ImageIcon className="w-8 h-8 text-accent/30" />
           </div>
+        ) : activeId && dragType === 'template' ? (
+          <div className="w-64 bg-editorial-900 border border-accent/50 p-3 rounded-lg text-white">
+            <span className="text-[11px] font-bold">{templates.find(t => t.id === activeId)?.name}</span>
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>
+  );
+}
+
+function SortableTemplateButton({ tpl, onClick }: { tpl: Template; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: tpl.id });
+  const style = { transform: CSS.Transform.toString(transform), opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : undefined };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} className="flex items-center gap-1.5">
+      <button {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-white/20 hover:text-white/50 flex-shrink-0">
+        <GripVertical className="w-3 h-3" />
+      </button>
+      <button onClick={onClick} className="flex-1 px-3 py-2.5 bg-white/[0.03] rounded-lg text-left border border-white/5 hover:border-accent/30 hover:bg-white/[0.05] transition-all group">
+        <div className="text-[10px] font-bold text-white/70 group-hover:text-accent mb-1">{tpl.name}</div>
+        <div className="text-[9px] text-white/30 truncate">{tpl.content}</div>
+      </button>
+    </div>
   );
 }
 
