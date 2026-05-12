@@ -19,12 +19,13 @@ interface ImageGridProps {
   onDelete: (id: string) => void;
   onGeneratePost: (id: string, prompt: string) => void;
   onBatchMove: (id: string, categoryId: string, localUrl: string) => void;
+  onToggleFlag: (id: string) => void;
 }
 
 export function ImageGrid({
   images, categories, selectedCategory, searchQuery, showSearch, setShowSearch,
   setSearchQuery, selectMode, setSelectMode, selectedIds, setSelectedIds,
-  onDelete, onGeneratePost, onBatchMove,
+  onDelete, onGeneratePost, onBatchMove, onToggleFlag,
 }: ImageGridProps) {
 
   const filtered = images.filter(img => {
@@ -117,6 +118,7 @@ export function ImageGrid({
                       return next;
                     });
                   }}
+                  onToggleFlag={() => onToggleFlag(image.id)}
                 />
               ))}
             </AnimatePresence>

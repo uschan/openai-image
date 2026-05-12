@@ -159,6 +159,10 @@ export default function App() {
     setImages(prev => prev.map(i => i.id === id ? { ...i, categoryId, localUrl } : i));
   };
 
+  const handleToggleFlag = (id: string) => {
+    setImages(prev => prev.map(i => i.id === id ? { ...i, flagged: !i.flagged } : i));
+  };
+
   const handleSaveTemplate = (tpl: Partial<Template>) => {
     if (tpl.id) setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, ...tpl } as Template : t));
     else setTemplates(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: tpl.name || "Untitled", content: tpl.content || "", isPinned: tpl.isPinned !== false }]);
@@ -296,7 +300,7 @@ export default function App() {
                 images={images} categories={categories} selectedCategory={selectedCategory}
                 searchQuery={searchQuery} showSearch={showSearch} setShowSearch={setShowSearch} setSearchQuery={setSearchQuery}
                 selectMode={selectMode} setSelectMode={setSelectMode} selectedIds={selectedIds} setSelectedIds={setSelectedIds}
-                onDelete={handleDeleteImage} onGeneratePost={handleGeneratePost} onBatchMove={handleBatchMove}
+                onDelete={handleDeleteImage} onGeneratePost={handleGeneratePost} onBatchMove={handleBatchMove} onToggleFlag={handleToggleFlag}
               />
               <TemplateLibrary
                 showTemplateLibrary={showTemplateLibrary} setShowTemplateLibrary={setShowTemplateLibrary}

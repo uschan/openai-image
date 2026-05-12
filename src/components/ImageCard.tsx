@@ -9,7 +9,8 @@ import {
   RefreshCw,
   ExternalLink,
   GripVertical,
-  CheckCircle2
+  CheckCircle2,
+  Flag
 } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -24,9 +25,10 @@ export interface ImageCardProps {
   selectMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: () => void;
+  onToggleFlag?: () => void;
 }
 
-export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect }: ImageCardProps) {
+export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
   const {
     attributes,
     listeners,
@@ -69,6 +71,13 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selec
       className={`group relative flex flex-col gap-4 ${selectMode ? 'cursor-pointer' : ''}`}
       onClick={() => { if (selectMode && onToggleSelect) onToggleSelect(); }}
     >
+      {/* Flag indicator */}
+      {image.flagged && (
+        <div className="absolute -top-1 -right-1 z-40 px-2 py-0.5 bg-amber-500/90 text-black text-[9px] font-black uppercase tracking-wider rounded-md shadow-lg flex items-center gap-1">
+          <Flag className="w-2.5 h-2.5 fill-black" /> 存疑
+        </div>
+      )}
+
       {/* Selection overlay */}
       {selectMode && (
         <div className={`absolute inset-0 z-30 rounded-2xl border-2 pointer-events-none transition-colors ${isSelected ? 'border-accent bg-accent/10' : 'border-transparent group-hover:border-white/10'}`}>
@@ -77,7 +86,7 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selec
       )}
 
       {/* Image Container with Drag Handle */}
-      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden glass border-white/10 group-hover:border-accent/40 shadow-2xl transition-all duration-700">
+      <div className={`relative aspect-[3/4] rounded-2xl overflow-hidden glass border transition-all duration-700 group-hover:border-accent/40 shadow-2xl ${image.flagged ? 'border-amber-500/50 !border-amber-500/50' : 'border-white/10'}`}>
         <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
                 onClick={handleOpenImage}
@@ -158,11 +167,18 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selec
           </span>
         </div>
         
-        <div className="flex items-center gap-2">
-          <FolderOpen className="w-3 h-3 text-accent/40" />
-          <span className="text-[9px] font-bold text-accent/60 uppercase tracking-widest">
-            {categoryName || image.categoryId || 'Uncategorized'}
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FolderOpen className="w-3 h-3 text-accent/40" />
+            <span className="text-[9px] font-bold text-accent/60 uppercase tracking-widest">
+              {categoryName || image.categoryId || 'Uncategorized'}
+            </span>
+          </div>
+          {image.status === 'completed' && (
+            <button onClick={(e) => { e.stopPropagation(); onToggleFlag?.(); }} className={`p-1 rounded transition-colors ${image.flagged ? 'text-amber-400 bg-amber-500/10' : 'text-white/15 hover:text-amber-400'}`} title={image.flagged ? '取消标记' : '标记存疑'}>
+              <Flag className={`w-3 h-3 ${image.flagged ? 'fill-amber-400' : ''}`} />
+            </button>
+          )}
         </div>
 
         <div className="bg-white/[0.02] p-3 rounded-xl border border-white/5 group-hover:border-white/10 transition-colors relative">

@@ -14,7 +14,8 @@ export interface GeneratedImage {
   timestamp: number;
   status: 'pending' | 'completed' | 'failed';
   categoryId?: string;
-  isSaved: boolean; // Retained for backwards compatibility if needed
+  isSaved: boolean;
+  flagged?: boolean;
   metadata: {
     model: string;
     ratio: string;
