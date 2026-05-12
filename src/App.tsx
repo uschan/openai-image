@@ -26,7 +26,8 @@ import {
   Sun,
   Moon,
   Cloud,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -102,6 +103,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'workspace' | 'assets' | 'models' | 'history'>('workspace');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [apiHealth, setApiHealth] = useState({ gemini: false, apimart: false, deepseek: false });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -369,6 +372,10 @@ export default function App() {
   // Keyboard shortcut: Ctrl+Enter to generate
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setShowSearch(prev => !prev);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         if (subject && !isGenerating) generateImage();
@@ -675,11 +682,35 @@ export default function App() {
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-8 custom-scrollbar">
             <div className="w-full space-y-12">
               
+              {/* Search bar (Ctrl+K) */}
+              {showSearch && (
+                <div className="flex items-center gap-3 max-w-xl">
+                  <Search className="w-4 h-4 text-white/30 flex-shrink-0" />
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Escape' && setShowSearch(false)}
+                    placeholder="Search subject or prompt..."
+                    className="flex-1 bg-transparent border-b border-white/10 text-sm text-white placeholder:text-white/20 py-2 outline-none focus:border-accent/50"
+                  />
+                  <span className="text-[10px] text-white/20 font-mono">ESC</span>
+                </div>
+              )}
+
               {/* Discovery Grid */}
               <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
                 <AnimatePresence mode="popLayout">
                   {images
-                    .filter(img => selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized'))
+                    .filter(img => {
+                      if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
+                        if (!searchQuery) return true;
+                        const q = searchQuery.toLowerCase();
+                        return (img.subject || '').toLowerCase().includes(q) || (img.prompt || '').toLowerCase().includes(q);
+                      }
+                      return false;
+                    })
                     .map((image, idx) => (
                     <ImageCard 
                       key={image.id}

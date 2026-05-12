@@ -94,7 +94,7 @@ async function startServer() {
       if (!fetchRes.ok) throw new Error(`Failed to fetch image: ${fetchRes.status}`);
       
       const slug = (subject || "untitled").replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
-      const filename = `${Date.now()}_${slug}_${id}.png`;
+      const filename = `${slug}_${Date.now()}_${id}.png`;
       const filepath = path.join(DOWNLOADS_DIR, filename);
       
       const buffer = await fetchRes.arrayBuffer();
