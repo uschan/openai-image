@@ -458,25 +458,11 @@ def watch_folder(
 def main() -> None:
     show_banner()
 
-    parser = argparse.ArgumentParser(
-        description="图片元数据清理工具（含 AI 水印，持久化去重）",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-示例:
-  python clean_metadata.py                  # 清理当前目录 + 启动监听（跳过已清理）
-  python clean_metadata.py --no-watch       # 仅批量清理，不监听
-  python clean_metadata.py --backup         # 清理前备份原文件（.bak）
-  python clean_metadata.py --recursive      # 递归处理子文件夹
-  python clean_metadata.py --force          # 强制重新清理所有图片（忽略记录）
-  python clean_metadata.py -d /path/to/dir  # 指定目标文件夹
-        """,
-    )
-    parser.add_argument("-d", "--dir",        default=".",         help="目标文件夹（默认当前目录）")
-    parser.add_argument("--backup",           action="store_true", help="清理前保存 .bak 备份")
-    parser.add_argument("--recursive", "-r",  action="store_true", help="递归处理子文件夹")
-    parser.add_argument("--no-watch",         action="store_true", help="仅执行批量清理，不启动监听")
-    parser.add_argument("--watch-only",       action="store_true", help="仅监听，不执行初始批量清理")
-    parser.add_argument("--force",            action="store_true", help="忽略已清理记录，强制重新处理所有图片")
+    parser = argparse.ArgumentParser(description="图片元数据清理工具（含 AI 水印，持久化去重）")
+    parser.add_argument("dir", nargs="?", default="downloads/image", help="目标文件夹（默认 downloads/image）")
+    parser.add_argument("--no-watch", action="store_true", help="仅批量清理，不启动监听")
+    parser.add_argument("--force", action="store_true", help="忽略已清理记录，强制重新处理所有图片")
+    parser.add_argument("--backup", action="store_true", help="清理前保存 .bak 备份")
     args = parser.parse_args()
 
     folder = Path(args.dir).resolve()
@@ -485,26 +471,18 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        import PIL  # noqa
+        import PIL
     except ImportError:
         log.error("缺少依赖 Pillow，请运行: pip install Pillow watchdog")
         sys.exit(1)
 
-    # ── 加载持久化注册表 ──────────────────────────────────────────────────────
     registry = CleanRegistry(folder)
 
-    # ── 初始批量清理 ──────────────────────────────────────────────────────────
-    if not args.watch_only:
-        batch_clean(
-            folder, registry,
-            backup=args.backup,
-            recursive=args.recursive,
-            force=args.force,
-        )
-
-    # ── 启动监听 ──────────────────────────────────────────────────────────────
     if not args.no_watch:
-        watch_folder(folder, registry, backup=args.backup, recursive=args.recursive)
+        batch_clean(folder, registry, backup=args.backup, recursive=True, force=args.force)
+
+    if not args.no_watch:
+        watch_folder(folder, registry, backup=args.backup, recursive=True)
 
 
 if __name__ == "__main__":
