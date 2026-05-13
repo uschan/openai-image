@@ -1,79 +1,111 @@
-# 碎片视觉化 (AI Synthesizer Focus)
+# WildSalt AI Image Studio
 
-An advanced web application for AI image generation, prompt management, and social media post synthesis. Built with React, Vite, and an Express full-stack framework.
+A self-hosted AI image generation workbench with prompt template management, drag-and-drop categorization, and social post synthesis. Built with React + TypeScript + Express.
 
 ## Features
 
-- **🎨 Multi-Model Image Generation**: Generate stunning images leveraging external APIs (Apimart AI).
-- **📝 Prompt Workflows (Templates)**: Manage your prompt templates in a grid layout. Save, pin, and quickly utilize specific prompt structures.
-- **✨ Prompt Enhancement**: Improve your image subjects automatically using **Google Gemini 2.5 Flash**.
-- **📂 Category Management**: Group generated images into specified folders/categories.
-- **📱 Post Content Generation**: Automatically generate social media posts (Title, Body, Tags) based on the image subject using **DeepSeek AI**. Includes regeneration options.
-- **⬇️ Smart Download Logic**: Images are downloaded locally using the naming convention `{category_name}_{id}.jpg` preventing clutter and establishing easy organization.
-- **📊 Detailed Statistics**: Tracks total image generation attempts, successful generations (consumed APIs), and failed attempts over time.
-- **🗄️ Local State**: Automatically persists all data (images, categories, templates, and analytics stats) locally into JSON files using the integrated Express server.
+### Image Generation
+- **Multi-model**: GPT-IMAGE and Gemini 3 Pro via APIMart API
+- **Async polling**: submit → poll → auto-download to local `downloads/`
+- **Configurable**: aspect ratio (1:1 ~ 16:9), resolution (1K ~ 4K)
+- **Subject-first naming**: files named `{subject}_{timestamp}_{id}.png` for natural grouping
+
+### Prompt Management
+- **Template library**: create, edit, pin, delete templates with `{SUBJECT}` variable
+- **Quick Templates**: pinned templates shown in right sidebar; drag to reorder
+- **Realized preview**: live prompt preview as you type subject
+- **Gemini enhancement**: refine subjects with Gemini 2.5 Flash
+- **Import/export**: share template libraries via JSON
+
+### Image Organization
+- **Categories**: unlimited custom categories with live counts
+- **Drag-to-categorize**: drag image cards onto sidebar categories; files move on disk
+- **Batch categorize**: select mode → multi-select → move to category
+- **Flag dubitous images**: mark questionable results with 🚩 "存疑" badge + amber border
+- **Delete with cleanup**: removes both database record and disk file
+- **Image repair**: auto re-downloads missing local files from remote URLs on page load
+
+### Search & Navigation
+- **Ctrl+K**: toggle search bar; filter by subject or prompt text in real-time
+- **Ctrl+Enter**: trigger image generation from anywhere
+- **Default uncategorized view**: hide already-categorized images by default
+
+### Social Post Generation
+- **DeepSeek-powered**: generate Xiaohongshu-style posts (title + body + tags)
+- **Regeneration**: re-generate if unsatisfied
+- **Copy to clipboard**: per-section copy buttons
+
+### Data & Export
+- **JSON persistence**: `images.json`, `templates.json`, `categories.json`, `stats.json`
+- **Export**: one-click download of templates + categories as JSON
+- **Session timer**: live session duration in footer
+- **API health indicators**: real-time status dots for Gemini / APIMart / DeepSeek
+
+### Metadata Stripping
+- **`clean_metadata.py`**: standalone tool to strip EXIF / XMP / PNG text / C2PA / AI watermarks
+- **Byte-level cleaning**: PNG chunk reconstruction + JPEG segment rebuilding
+- **Incremental**: SHA-1 registry skips already-cleaned files
+- **Watch mode**: auto-processes new images via filesystem monitoring
+
+```
+python clean_metadata.py                    # default: downloads/image/
+python clean_metadata.py /path/to/dir       # specific directory
+python clean_metadata.py --no-watch         # one-shot only
+python clean_metadata.py --force            # re-clean all
+```
 
 ## Tech Stack
 
-- **Frontend**: React 19, Tailwind CSS, Lucide React (Icons), Motion (Animations), Dnd-Kit (Drag-and-Drop)
-- **Backend**: Express.js, TypeScript (tsx)
-- **AI Integrations**: 
-  - Image Gen: Apimart API (Flux models natively supported)
-  - Post Synthesis: DeepSeek API (`deepseek-chat`)
-  - Prompt Enhancement: Google Gemini API (`gemini-2.5-flash`)
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, TypeScript, Tailwind CSS 4 |
+| Backend | Express.js, `tsx` runner |
+| Build | Vite 6 |
+| UI | Lucide React (icons), Motion (animations), DnD-Kit (drag & drop) |
+| AI | APIMart (image gen), DeepSeek (posts), Gemini (prompt enhancement) |
 
-## Prerequisites
+## Quick Start
 
-- Node.js (v18 or higher)
-- API Keys for the respective AI services.
-
-## Environment Setup
-
-Create a `.env` file in the root directory and add the following keys:
-
-```env
-# Google Gemini API Key for prompt enhancement
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# DeepSeek API Key for social media post content generation
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
-
-# Apimart API Key for image generation
-APIMART_API_KEY=your_apimart_api_key_here
+```bash
+npm install
+npm run dev         # → http://localhost:3000
 ```
 
-## Installation & Running Locally
+Requires `.env` with:
 
-1. Clone the repository and navigate into the folder.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the development server (runs both Vite and Express):
-   ```bash
-   npm run dev
-   ```
-   The server runs on `http://localhost:3000`.
+```env
+GEMINI_API_KEY=     # optional, for prompt enhancement
+DEEPSEEK_API_KEY=   # optional, for social post generation
+APIMART_API_KEY=    # required, for image generation
+```
 
-## Production Build
+## Project Structure
 
-To build the application for a production environment:
+```
+├── server.ts             # Express backend (API proxy + file storage)
+├── src/
+│   ├── App.tsx           # state + handlers + DnD orchestration
+│   ├── components/
+│   │   ├── Header.tsx        # top bar with API indicators + theme toggle
+│   │   ├── LeftSidebar.tsx   # category list with drag-drop
+│   │   ├── RightSidebar.tsx  # subject input, template, quick templates, config
+│   │   ├── ImageGrid.tsx     # search bar, batch toolbar, image card grid
+│   │   ├── ImageCard.tsx     # individual card: image, metadata, flag, delete
+│   │   ├── SortableCategory.tsx
+│   │   ├── TemplateLibrary.tsx
+│   │   ├── HistoryTab.tsx
+│   │   └── ModelsTab.tsx
+│   ├── types.ts          # TypeScript interfaces
+│   └── index.css         # Tailwind + custom theme
+├── clean_metadata.py     # standalone metadata stripper
+├── downloads/            # saved images (gitignored)
+└── *.json                # runtime data files (gitignored)
+```
 
-1. Compile the static assets:
-   ```bash
-   npm run build
-   ```
-2. Start the production server:
-   ```bash
-   npm start
-   ```
+## Keyboard Shortcuts
 
-## Folder Structure & Persistence
-
-- `/src`: Contains the React frontend logic and Tailwind styles.
-- `/server.ts`: The Express backend handling API token proxies and JSON file storage.
-- `*.json` (Data Files): When you use the app, it dynamically generates and updates `images.json`, `templates.json`, `categories.json`, and `stats.json` in the root backend directory to store your user data across sessions.
-
-## Note on Local App Usage
-
-When running locally, browser cross-origin download restrictions are mitigated via object URLs. Images downloaded through the UI will be named smartly and stored locally based on their assigned custom category name, or default to `download_<id>.jpg` if uncategorized.
+| Key | Action |
+|-----|--------|
+| `Ctrl+Enter` | Generate image |
+| `Ctrl+K` | Toggle search bar |
+| `ESC` | Close search bar |

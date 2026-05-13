@@ -459,7 +459,7 @@ def main() -> None:
     show_banner()
 
     parser = argparse.ArgumentParser(description="图片元数据清理工具（含 AI 水印，持久化去重）")
-    parser.add_argument("dir", nargs="?", default="downloads/image", help="目标文件夹（默认 downloads/image）")
+    parser.add_argument("dir", nargs="?", default="downloads", help="目标文件夹（默认 downloads）")
     parser.add_argument("--no-watch", action="store_true", help="仅批量清理，不启动监听")
     parser.add_argument("--force", action="store_true", help="忽略已清理记录，强制重新处理所有图片")
     parser.add_argument("--backup", action="store_true", help="清理前保存 .bak 备份")
