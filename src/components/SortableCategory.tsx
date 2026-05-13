@@ -44,7 +44,7 @@ export function SortableCategory({
         onClick={() => onSelect(category.id)}
         title={!isSidebarOpen ? `${category.name} (${category.count})` : undefined}
         className={`w-full flex items-center transition-all cursor-pointer rounded-lg border-2 ${
-          isSidebarOpen ? 'gap-3 px-3 py-2' : 'justify-center p-3'
+          isSidebarOpen ? 'gap-3 px-3 py-2.5' : 'justify-center p-3'
         } ${
           isSelected 
             ? 'bg-white/5 border-accent/20 text-white' 
