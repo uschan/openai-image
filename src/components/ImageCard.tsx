@@ -111,6 +111,12 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selec
           <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center space-y-4 shimmer">
             <Loader2 className="w-8 h-8 text-white/20 animate-spin" />
             <span className="label-caps !text-white/40">Synthesizing...</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(image.id); }}
+              className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all mt-2"
+            >
+              Cancel
+            </button>
           </div>
         ) : (
           <>

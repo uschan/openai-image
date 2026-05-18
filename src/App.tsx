@@ -88,7 +88,13 @@ export default function App() {
       try {
         const r = await fetch("/api/data"); const d = await r.json();
         if (d.images) {
-          const loaded = d.images.map((img: any) => ({ ...img, postContent: undefined, isGeneratingPost: false }));
+          const loaded = d.images.map((img: any) => {
+            // Auto-fail pending images older than 10 minutes
+            if (img.status === 'pending' && img.timestamp && Date.now() - img.timestamp > 600000) {
+              return { ...img, status: 'failed', postContent: undefined, isGeneratingPost: false };
+            }
+            return { ...img, postContent: undefined, isGeneratingPost: false };
+          });
           setImages(loaded);
           for (const img of loaded) {
             if (img.status === 'completed' && img.url && !img.localUrl) {
