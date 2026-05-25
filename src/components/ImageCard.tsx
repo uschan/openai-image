@@ -3,6 +3,8 @@ import { motion } from 'motion/react';
 import {
   Loader2, Trash2, FolderOpen, Copy, Sparkles, RefreshCw, ExternalLink, Flag, CheckCircle2
 } from 'lucide-react';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import type { GeneratedImage } from '../types';
 
 export interface ImageCardProps {
@@ -18,6 +20,17 @@ export interface ImageCardProps {
 }
 
 export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
+  const { setNodeRef, transform, isDragging, listeners, attributes } = useDraggable({ 
+    id: image.id,
+    data: { type: 'image', categoryId: image.categoryId },
+    disabled: selectMode,
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
 
   const handleCopyPrompt = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -34,9 +47,10 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
 
   return (
     <motion.div
-      draggable={image.status === 'completed' && !selectMode}
-      onDragStart={(e) => { e.dataTransfer.setData('text/plain', image.id); (e.target as HTMLElement).style.opacity = '0.5'; }}
-      onDragEnd={(e) => { (e.target as HTMLElement).style.opacity = '1'; }}
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
