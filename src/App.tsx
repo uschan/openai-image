@@ -122,7 +122,7 @@ export default function App() {
     const t = setTimeout(async () => {
       const imgs = images.map(({ postContent, isGeneratingPost, ...img }) => img);
       await fetch("/api/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ images: imgs, categories, templates, stats: generationStats }) });
-    }, 1000);
+    }, 3000);
     return () => clearTimeout(t);
   }, [images, categories, templates, generationStats]);
 

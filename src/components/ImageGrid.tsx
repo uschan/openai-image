@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { Search } from 'lucide-react';
 import { ImageCard } from './ImageCard';
@@ -102,7 +102,7 @@ export function ImageGrid({
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6" style={{ contentVisibility: 'auto' }}>
             <AnimatePresence mode="popLayout">
               {filtered.map(image => (
                 <ImageCard

@@ -28,7 +28,7 @@ export interface ImageCardProps {
   onToggleFlag?: () => void;
 }
 
-export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
+export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
   const {
     attributes,
     listeners,
@@ -123,6 +123,7 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selec
             <img 
               src={image.localUrl || image.url} 
               alt={image.prompt}
+              loading="lazy"
               onError={(e) => {
                 const img = e.currentTarget;
                 if (img.src === image.localUrl && image.url) {
@@ -258,3 +259,5 @@ export function ImageCard({ image, categoryName, onDelete, onGeneratePost, selec
     </motion.div>
   );
 }
+
+export const ImageCard = React.memo(_ImageCard);
