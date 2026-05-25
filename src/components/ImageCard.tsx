@@ -67,14 +67,6 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
             >
                 <ExternalLink className="w-4 h-4" />
             </button>
-            <div 
-                {...listeners} 
-                {...attributes}
-                className="p-2 bg-black/40 hover:bg-black/80 backdrop-blur-md text-white rounded-lg cursor-grab active:cursor-grabbing transition-all"
-                title="Drag to Category"
-            >
-                <GripVertical className="w-4 h-4" />
-            </div>
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none" />
