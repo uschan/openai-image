@@ -24,7 +24,7 @@ export default function App() {
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [dragType, setDragType] = useState<'category' | 'image' | 'template' | null>(null);
+  const [dragType, setDragType] = useState<'category' | 'template' | null>(null);
   const [subject, setSubject] = useState("");
   const [templates, setTemplates] = useState<Template[]>([]);
   const [promptTemplate, setPromptTemplate] = useState("");
@@ -199,7 +199,6 @@ export default function App() {
   const handleDragStart = (e: DragStartEvent) => {
     setActiveId(e.active.id as string);
     if (categories.find(c => c.id === e.active.id)) setDragType('category');
-    else if (images.find(i => i.id === e.active.id)) setDragType('image');
     else if (templates.find(t => t.id === e.active.id)) setDragType('template');
   };
 
@@ -210,15 +209,6 @@ export default function App() {
     }
     if (dragType === 'template' && over && active.id !== over.id) {
       setTemplates(items => arrayMove(items, items.findIndex(i => i.id === active.id), items.findIndex(i => i.id === over.id)));
-    }
-    if (dragType === 'image' && over) {
-      let catId = over.data.current?.categoryId;
-      if (!catId) { const pid = over.id.toString().replace('drop-', ''); if (categories.find(c => c.id === pid)) catId = pid; }
-      if (catId) {
-        const img = images.find(i => i.id === active.id);
-        setImages(prev => prev.map(i => i.id === active.id ? { ...i, categoryId: catId! } : i));
-        if (img) moveImageToCategory(img.id, img.localUrl, catId);
-      }
     }
     setActiveId(null); setDragType(null);
   };
@@ -265,6 +255,13 @@ export default function App() {
     } catch (e: any) { showError(e.message); setIsGenerating(false); setGenerationStats(prev => ({ ...prev, failed: prev.failed + 1 })); }
   };
 
+  const handleNativeImageDrop = (imageId: string, categoryId: string) => {
+    const img = images.find(i => i.id === imageId);
+    if (!img) return;
+    setImages(prev => prev.map(i => i.id === imageId ? { ...i, categoryId } : i));
+    moveImageToCategory(imageId, img.localUrl, categoryId);
+  };
+
   const handleExport = () => {
     const data = { templates, categories: categories.filter(c => c.id !== 'all' && c.id !== 'uncategorized'), exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -296,7 +293,7 @@ export default function App() {
               isAddingCategory={isAddingCategory} setIsAddingCategory={setIsAddingCategory}
               newCategoryName={newCategoryName} setNewCategoryName={setNewCategoryName}
               selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
-              handleAddCategory={handleAddCategory}
+              handleAddCategory={handleAddCategory} onNativeImageDrop={handleNativeImageDrop}
             />
           )}
 
@@ -347,8 +344,6 @@ export default function App() {
           <div className="w-64 bg-editorial-900 border border-accent/50 p-3 rounded-lg flex items-center gap-3 text-white"><Layers className="w-4 h-4 text-accent" /><span className="text-[11px] font-bold uppercase">{categories.find(c => c.id === activeId)?.name}</span></div>
         ) : activeId && dragType === 'template' ? (
           <div className="w-64 bg-editorial-900 border border-accent/50 p-3 rounded-lg text-white"><span className="text-[11px] font-bold">{templates.find(t => t.id === activeId)?.name}</span></div>
-        ) : activeId && dragType === 'image' ? (
-          <div className="w-48 aspect-[3/4] bg-editorial-900 border border-accent/50 rounded-xl flex items-center justify-center"><ImageIcon className="w-8 h-8 text-accent/30" /></div>
         ) : null}
       </DragOverlay>
     </DndContext>

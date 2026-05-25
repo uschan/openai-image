@@ -3,8 +3,6 @@ import { motion } from 'motion/react';
 import {
   Loader2, Trash2, FolderOpen, Copy, Sparkles, RefreshCw, ExternalLink, Flag, CheckCircle2
 } from 'lucide-react';
-import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import type { GeneratedImage } from '../types';
 
 export interface ImageCardProps {
@@ -20,17 +18,6 @@ export interface ImageCardProps {
 }
 
 export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
-  const { setNodeRef, transform, isDragging, listeners, attributes } = useDraggable({ 
-    id: image.id,
-    data: { type: 'image', categoryId: image.categoryId },
-    disabled: selectMode,
-  });
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : undefined,
-  };
 
   const handleCopyPrompt = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,12 +32,20 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    if (image.status !== 'completed' || selectMode) { e.preventDefault(); return; }
+    e.dataTransfer.setData('text/plain', image.id);
+    e.currentTarget.style.opacity = '0.5';
+  };
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.style.opacity = '1';
+  };
+
   return (
     <motion.div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
+      draggable={image.status === 'completed' && !selectMode}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
@@ -102,6 +97,7 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
               src={image.localUrl || image.url} 
               alt={image.prompt}
               loading="lazy"
+              draggable="false"
               onError={(e) => {
                 const img = e.currentTarget;
                 if (img.src === image.localUrl && image.url) {
