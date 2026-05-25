@@ -109,3 +109,49 @@ APIMART_API_KEY=    # required, for image generation
 | `Ctrl+Enter` | Generate image |
 | `Ctrl+K` | Toggle search bar |
 | `ESC` | Close search bar |
+
+## Deployment (VPS)
+
+### Production build
+
+```bash
+npm run build        # compile static assets to dist/
+npm start            # serve on port 3000 (NODE_ENV=production)
+```
+
+### nginx reverse proxy (optional)
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+### pm2 process manager
+
+```bash
+npm install -g pm2
+pm2 start npm --name "wildsalt" -- start
+pm2 save
+pm2 startup
+```
+
+### Notes
+
+- `.env` keys are read server-side only — never exposed to the browser
+- `downloads/` grows over time; mount a volume or symlink to external storage if needed
+- `images.json` can reach hundreds of MB; backup regularly
+- `clean_metadata.py` requires `pip install Pillow watchdog`
+
+## Architecture Notes
+
+- **Image drag-and-drop** uses native HTML5 Drag API — zero React overhead, GPU-composited ghost image, works identically to the original vanilla JS version
+- **Category reorder** and **template sort** use @dnd-kit since they involve few items and benefit from React state integration
+- Framer Motion `layout` prop is intentionally omitted from image cards to avoid FPS drops during grid rendering
