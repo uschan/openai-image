@@ -1,5 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { AnimatePresence } from 'motion/react';
+import React from 'react';
 import { Search } from 'lucide-react';
 import { ImageCard } from './ImageCard';
 import type { GeneratedImage, Category } from '../types';
@@ -102,9 +101,8 @@ export function ImageGrid({
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6" style={{ contentVisibility: 'auto' }}>
-            <AnimatePresence mode="popLayout">
-              {filtered.map(image => (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
+            {filtered.map(image => (
                 <ImageCard
                   key={image.id} image={image}
                   categoryName={categories.find(c => c.id === image.categoryId)?.name}
@@ -121,7 +119,6 @@ export function ImageGrid({
                   onToggleFlag={() => onToggleFlag(image.id)}
                 />
               ))}
-            </AnimatePresence>
           </div>
 
           {filtered.length === 0 && images.length > 0 && (

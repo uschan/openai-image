@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Layers, Image as ImageIcon, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  DndContext, pointerWithin, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
   DragOverlay, defaultDropAnimationSideEffects, DragStartEvent, DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -275,7 +275,7 @@ export default function App() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-      <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className={`flex flex-col h-screen h-full w-full overflow-hidden bg-editorial-950 transition-all duration-700 ${theme === 'light' ? 'invert hue-rotate-180' : ''}`}>
 
         <AnimatePresence>

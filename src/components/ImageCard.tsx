@@ -64,7 +64,6 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
     <motion.div
       ref={setNodeRef}
       style={style}
-      layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
