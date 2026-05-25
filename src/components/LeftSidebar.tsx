@@ -15,11 +15,12 @@ interface LeftSidebarProps {
   selectedCategory: string;
   setSelectedCategory: (id: string) => void;
   handleAddCategory: () => void;
+  onImageDrop?: (imageId: string, categoryId: string) => void;
 }
 
 export function LeftSidebar({
   categories, isSidebarOpen, setIsSidebarOpen, isAddingCategory, setIsAddingCategory,
-  newCategoryName, setNewCategoryName, selectedCategory, setSelectedCategory, handleAddCategory,
+  newCategoryName, setNewCategoryName, selectedCategory, setSelectedCategory, handleAddCategory, onImageDrop,
 }: LeftSidebarProps) {
   return (
     <motion.aside
@@ -63,7 +64,7 @@ export function LeftSidebar({
                   category={cat}
                   isSelected={selectedCategory === cat.id}
                   isSidebarOpen={isSidebarOpen}
-                  onSelect={setSelectedCategory}
+                  onSelect={setSelectedCategory} onImageDrop={onImageDrop}
                 />
               ))}
             </SortableContext>

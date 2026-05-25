@@ -10,13 +10,15 @@ export interface SortableCategoryProps {
   isSelected: boolean;
   isSidebarOpen: boolean;
   onSelect: (id: string) => void;
+  onImageDrop?: (imageId: string, categoryId: string) => void;
 }
 
 export function SortableCategory({ 
   category, 
   isSelected, 
   isSidebarOpen, 
-  onSelect 
+  onSelect,
+  onImageDrop
 }: SortableCategoryProps) {
   const {
     attributes,
@@ -52,6 +54,11 @@ export function SortableCategory({
               ? 'bg-accent/10 border-accent text-accent scale-105'
               : 'border-transparent text-white/40 hover:bg-white/5 hover:text-white'
         }`}
+        onDragOver={(e) => { e.preventDefault(); }}
+        onDrop={(e) => {
+          const imageId = e.dataTransfer.getData('text/plain');
+          if (imageId && onImageDrop) onImageDrop(imageId, category.id);
+        }}
       >
         {isSidebarOpen && (
           <div {...listeners} {...attributes} className="cursor-grab hover:text-white transition-colors">
