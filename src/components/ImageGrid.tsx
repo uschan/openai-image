@@ -27,14 +27,20 @@ export function ImageGrid({
   onDelete, onGeneratePost, onBatchMove, onToggleFlag,
 }: ImageGridProps) {
 
-  const filtered = images.filter(img => {
-    if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (img.subject || '').toLowerCase().includes(q) || (img.prompt || '').toLowerCase().includes(q);
-    }
-    return false;
-  });
+  const filtered = images
+    .filter(img => {
+      if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (img.subject || '').toLowerCase().includes(q) || (img.prompt || '').toLowerCase().includes(q);
+      }
+      return false;
+    })
+    .sort((a, b) => {
+      // Group by subject, then by timestamp descending
+      const s = (a.subject || '').localeCompare(b.subject || '');
+      return s !== 0 ? s : b.timestamp - a.timestamp;
+    });
 
   return (
     <main className="flex-1 flex flex-col bg-editorial-800 relative">
