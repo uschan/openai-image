@@ -35,12 +35,22 @@ export function ImageGrid({
         return (img.subject || '').toLowerCase().includes(q) || (img.prompt || '').toLowerCase().includes(q);
       }
       return false;
-    })
-    .sort((a, b) => {
-      // Group by subject, then by timestamp descending
-      const s = (a.subject || '').localeCompare(b.subject || '');
-      return s !== 0 ? s : b.timestamp - a.timestamp;
     });
+
+  // Pre-compute latest timestamp per subject for group sorting
+  const subjectLatest = new Map<string, number>();
+  for (const img of filtered) {
+    const s = img.subject || '';
+    if (!subjectLatest.has(s) || img.timestamp > subjectLatest.get(s)!) {
+      subjectLatest.set(s, img.timestamp);
+    }
+  }
+
+  const sorted = [...filtered].sort((a, b) => {
+    // Sort by group latest activity (newest groups first), then within group by newest first
+    const d = (subjectLatest.get(b.subject || '') || 0) - (subjectLatest.get(a.subject || '') || 0);
+    return d !== 0 ? d : b.timestamp - a.timestamp;
+  });
 
   return (
     <main className="flex-1 flex flex-col bg-editorial-800 relative">
@@ -108,7 +118,7 @@ export function ImageGrid({
 
           {/* Grid */}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
-            {filtered.map(image => (
+            {sorted.map(image => (
                 <ImageCard
                   key={image.id} image={image}
                   categoryName={categories.find(c => c.id === image.categoryId)?.name}
@@ -127,7 +137,7 @@ export function ImageGrid({
               ))}
           </div>
 
-          {filtered.length === 0 && images.length > 0 && (
+          {sorted.length === 0 && images.length > 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
               <h2 className="text-3xl font-light serif-italic italic tracking-tight text-white/20">No matches found.</h2>
             </div>
