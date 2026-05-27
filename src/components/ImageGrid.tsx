@@ -62,7 +62,7 @@ export function ImageGrid({
           )}
 
           {/* Batch toolbar */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sticky top-0 z-10 -mx-4 px-4 py-2 bg-editorial-800/95 backdrop-blur-sm">
             <button
               onClick={() => { setSelectMode(!selectMode); setSelectedIds(new Set()); }}
               className={`text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${selectMode ? 'bg-accent/20 border-accent text-accent' : 'border-white/10 text-white/30 hover:text-white hover:border-white/30'}`}
