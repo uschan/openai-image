@@ -76,3 +76,9 @@
 .invert.hue-rotate-180 img {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* Larger textarea resize handle */
+.template-textarea::-webkit-resizer {
+  border-width: 8px;
+  border-color: transparent rgba(255,255,255,0.3) rgba(255,255,255,0.3) transparent;
+}

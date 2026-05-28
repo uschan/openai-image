@@ -64,8 +64,20 @@ export function RightSidebar({
             value={promptTemplate}
             onChange={(e) => setPromptTemplate(e.target.value)}
             placeholder="Use {SUBJECT} variable..."
-            className="w-full bg-editorial-900/50 border border-white/5 rounded-lg p-3 text-xs font-mono text-white/60 focus:border-accent/20 focus:ring-0 resize-y min-h-[4rem] max-h-64 transition-shadow custom-scrollbar"
+            className="template-textarea w-full bg-editorial-900/50 border border-white/5 rounded-lg p-3 text-xs font-mono text-white/60 focus:border-accent/20 focus:ring-0 resize-y min-h-[4rem] max-h-64 transition-shadow custom-scrollbar"
           />
+        </section>
+
+        {/* Reference tips */}
+        <section>
+          <details className="group">
+            <summary className="text-[9px] font-black text-white/20 uppercase tracking-widest cursor-pointer hover:text-white/40 transition-colors mb-3">Prompt Tips ▼</summary>
+            <div className="text-[9px] leading-relaxed text-white/20 space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
+              <div><span className="text-white/40 font-bold">Wing states ></span> spread wings · folded wings · dorsal view · ventral view · lateral view · perched · in flight · hovering · landing</div>
+              <div><span className="text-white/40 font-bold">Camera angles ></span> top-down / bird's-eye · side profile · 45° angle · macro close-up · eye-level · low angle · flat lay · specimen-style</div>
+              <div><span className="text-white/40 font-bold">Composition ></span> rule of thirds · negative space · centered specimen · diagonal flow · framed by foliage · shallow depth of field</div>
+            </div>
+          </details>
         </section>
 
         {/* Preview */}

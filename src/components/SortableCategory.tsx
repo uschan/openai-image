@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, GripVertical, Flower2, Utensils, BookOpen, Leaf, Palette, Camera, Star } from 'lucide-react';
+import { Layers, GripVertical, Flower2, Utensils, BookOpen, Leaf, Shell, Palette, Bug, Dog, Fish, Camera, Star } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Category } from '../types';
@@ -21,8 +21,8 @@ export function SortableCategory({
   onNativeImageDrop,
 }: SortableCategoryProps) {
   const ICON_MAP: Record<string, React.ReactNode> = {
-    Layers: <Layers />, Flower2: <Flower2 />, Utensils: <Utensils />,
-    BookOpen: <BookOpen />, Leaf: <Leaf />, Palette: <Palette />, Camera: <Camera />, Star: <Star />,
+    Layers: <Layers />, Flower2: <Flower2 />, Utensils: <Utensils />, Shell: <Shell />,
+    BookOpen: <BookOpen />, Leaf: <Leaf />, Palette: <Palette />, Camera: <Camera />, Star: <Star />, Bug: <Bug />, Dog: <Dog />, Fish: <Fish />,
   };
   const catIcon = ICON_MAP[category.icon || 'Layers'] || <Layers />;
   const {

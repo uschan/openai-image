@@ -18,7 +18,7 @@ export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme, on
             <path d="M 10 30 L 30 80 L 50 40 L 70 80 L 90 30" />
             <circle cx="50" cy="15" r="8" fill="currentColor" stroke="none" />
           </svg>
-          WILDSALT
+          野盐の物语
         </div>
         <nav className="hidden md:flex gap-8 text-xs font-bold uppercase tracking-wider text-white/30">
           {(['workspace', 'assets', 'models', 'history'] as const).map(tab => (
