@@ -35,6 +35,8 @@ export function LeftSidebar({
     Camera: <Camera className="w-3 h-3" />,
     Star: <Star className="w-3 h-3" />,
   };
+
+  return (
     <motion.aside
       initial={false}
       animate={{ width: isSidebarOpen ? 260 : 72 }}
