@@ -23,6 +23,7 @@ export default function App() {
   ]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryIcon, setNewCategoryIcon] = useState("Layers");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragType, setDragType] = useState<'category' | 'template' | null>(null);
   const [subject, setSubject] = useState("");
@@ -139,8 +140,8 @@ export default function App() {
 
   const handleAddCategory = () => {
     if (!newCategoryName) return;
-    setCategories(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: newCategoryName, count: 0 }]);
-    setNewCategoryName(""); setIsAddingCategory(false);
+    setCategories(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: newCategoryName, count: 0, icon: newCategoryIcon }]);
+    setNewCategoryName(""); setNewCategoryIcon("Layers"); setIsAddingCategory(false);
   };
 
   const handleGeneratePost = async (id: string, subject: string) => {
@@ -292,6 +293,7 @@ export default function App() {
               categories={categories} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
               isAddingCategory={isAddingCategory} setIsAddingCategory={setIsAddingCategory}
               newCategoryName={newCategoryName} setNewCategoryName={setNewCategoryName}
+              newCategoryIcon={newCategoryIcon} setNewCategoryIcon={setNewCategoryIcon}
               selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
               handleAddCategory={handleAddCategory} onNativeImageDrop={handleNativeImageDrop}
             />

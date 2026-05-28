@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { ChevronLeft, ChevronRight, FolderOpen, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FolderOpen, Plus, Layers, Flower2, Utensils, BookOpen, Leaf, Palette, Camera, Star } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableCategory } from './SortableCategory';
 import type { Category } from '../types';
@@ -15,14 +15,26 @@ interface LeftSidebarProps {
   selectedCategory: string;
   setSelectedCategory: (id: string) => void;
   handleAddCategory: () => void;
+  newCategoryIcon: string;
+  setNewCategoryIcon: (v: string) => void;
   onNativeImageDrop?: (imageId: string, categoryId: string) => void;
 }
 
 export function LeftSidebar({
   categories, isSidebarOpen, setIsSidebarOpen, isAddingCategory, setIsAddingCategory,
-  newCategoryName, setNewCategoryName, selectedCategory, setSelectedCategory, handleAddCategory, onNativeImageDrop,
+  newCategoryName, setNewCategoryName, newCategoryIcon, setNewCategoryIcon,
+  selectedCategory, setSelectedCategory, handleAddCategory, onNativeImageDrop,
 }: LeftSidebarProps) {
-  return (
+  const CAT_ICONS: Record<string, React.ReactNode> = {
+    Layers: <Layers className="w-3 h-3" />,
+    Flower2: <Flower2 className="w-3 h-3" />,
+    Utensils: <Utensils className="w-3 h-3" />,
+    BookOpen: <BookOpen className="w-3 h-3" />,
+    Leaf: <Leaf className="w-3 h-3" />,
+    Palette: <Palette className="w-3 h-3" />,
+    Camera: <Camera className="w-3 h-3" />,
+    Star: <Star className="w-3 h-3" />,
+  };
     <motion.aside
       initial={false}
       animate={{ width: isSidebarOpen ? 260 : 72 }}
@@ -44,15 +56,24 @@ export function LeftSidebar({
           </div>
 
           {isAddingCategory && isSidebarOpen && (
-            <div className="mb-4 flex gap-2">
+            <div className="mb-4 space-y-2">
               <input
                 autoFocus
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
                 placeholder="New Category..."
-                className="flex-1 bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white focus:border-accent/40 focus:ring-0"
+                className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white focus:border-accent/40 focus:ring-0"
               />
+              <div className="flex gap-1 flex-wrap">
+                {Object.entries(CAT_ICONS).map(([name, icon]) => (
+                  <button key={name} onClick={() => setNewCategoryIcon(name)}
+                    className={`p-1.5 rounded transition-colors ${newCategoryIcon === name ? 'bg-accent/20 text-accent' : 'text-white/30 hover:text-white/60'}`}
+                    title={name}>
+                    {icon}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

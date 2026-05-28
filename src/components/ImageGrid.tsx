@@ -37,20 +37,7 @@ export function ImageGrid({
       return false;
     });
 
-  // Pre-compute latest timestamp per subject for group sorting
-  const subjectLatest = new Map<string, number>();
-  for (const img of filtered) {
-    const s = img.subject || '';
-    if (!subjectLatest.has(s) || img.timestamp > subjectLatest.get(s)!) {
-      subjectLatest.set(s, img.timestamp);
-    }
-  }
-
-  const sorted = [...filtered].sort((a, b) => {
-    // Sort by group latest activity (newest groups first), then within group by newest first
-    const d = (subjectLatest.get(b.subject || '') || 0) - (subjectLatest.get(a.subject || '') || 0);
-    return d !== 0 ? d : b.timestamp - a.timestamp;
-  });
+  const sorted = [...filtered].sort((a, b) => b.timestamp - a.timestamp);
 
   return (
     <main className="flex-1 flex flex-col bg-editorial-800 relative">

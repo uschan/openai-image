@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, GripVertical } from 'lucide-react';
+import { Layers, GripVertical, Flower2, Utensils, BookOpen, Leaf, Palette, Camera, Star } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Category } from '../types';
@@ -20,6 +20,11 @@ export function SortableCategory({
   onSelect,
   onNativeImageDrop,
 }: SortableCategoryProps) {
+  const ICON_MAP: Record<string, React.ReactNode> = {
+    Layers: <Layers />, Flower2: <Flower2 />, Utensils: <Utensils />,
+    BookOpen: <BookOpen />, Leaf: <Leaf />, Palette: <Palette />, Camera: <Camera />, Star: <Star />,
+  };
+  const catIcon = ICON_MAP[category.icon || 'Layers'] || <Layers />;
   const {
     attributes,
     listeners,
@@ -67,7 +72,9 @@ export function SortableCategory({
             <GripVertical className="w-3 h-3 opacity-30 group-hover:opacity-100" />
           </div>
         )}
-        <Layers className={`shrink-0 ${isSidebarOpen ? 'w-4 h-4' : 'w-5 h-5'} ${isSelected ? 'text-accent' : ''}`} />
+        <span className={`shrink-0 ${isSidebarOpen ? 'w-4 h-4' : 'w-5 h-5'} ${isSelected ? 'text-accent' : ''}`}>
+          {catIcon}
+        </span>
         {isSidebarOpen && (
           <>
             <span className="flex-1 text-left text-[11px] font-bold uppercase tracking-wide truncate">

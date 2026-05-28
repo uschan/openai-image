@@ -1,5 +1,5 @@
 import { Sparkles, Loader2, Zap, GripVertical } from 'lucide-react';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Template } from '../types';
 
@@ -85,12 +85,14 @@ export function RightSidebar({
                 No pinned templates. Manage templates to add quick blueprints.
               </div>
             ) : (
-              <SortableContext items={templates.filter(t => t.isPinned !== false).map(t => t.id)} strategy={verticalListSortingStrategy}>
+              <SortableContext items={templates.filter(t => t.isPinned !== false).map(t => t.id)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-2 gap-2">
                 {templates.filter(t => t.isPinned !== false).map(tpl => (
                   <div key={tpl.id}>
                     <SortableTemplateBtn tpl={tpl} onClick={() => setPromptTemplate(tpl.content)} />
                   </div>
                 ))}
+                </div>
               </SortableContext>
             )}
           </div>
@@ -152,13 +154,13 @@ function SortableTemplateBtn({ tpl, onClick }: { tpl: Template; onClick: () => v
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: tpl.id });
   const style = { transform: CSS.Transform.toString(transform), opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : undefined };
   return (
-    <div ref={setNodeRef} style={style} {...attributes} onClick={onClick} className="px-3 py-2.5 bg-white/[0.03] rounded-lg text-left border border-white/5 hover:border-accent/30 hover:bg-white/[0.05] transition-all group cursor-pointer flex items-center gap-2 overflow-hidden">
+    <div ref={setNodeRef} style={style} {...attributes} onClick={onClick} className="px-2 py-2 bg-white/[0.03] rounded-lg text-left border border-white/5 hover:border-accent/30 hover:bg-white/[0.05] transition-all group cursor-pointer flex items-center gap-1.5 overflow-hidden">
       <button {...listeners} onClick={(e) => e.stopPropagation()} className="cursor-grab active:cursor-grabbing text-white/20 group-hover:text-white/40 flex-shrink-0">
-        <GripVertical className="w-3 h-3" />
+        <GripVertical className="w-2.5 h-2.5" />
       </button>
       <div className="min-w-0">
-        <div className="text-[10px] font-bold text-white/70 group-hover:text-accent truncate">{tpl.name}</div>
-        <div className="text-[9px] text-white/30 truncate">{tpl.content}</div>
+        <div className="text-[9px] font-bold text-white/70 group-hover:text-accent truncate">{tpl.name}</div>
+        <div className="text-[8px] text-white/30 truncate">{tpl.content.slice(0, 30)}</div>
       </div>
     </div>
   );
