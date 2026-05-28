@@ -73,9 +73,9 @@ export function RightSidebar({
           <details className="group">
             <summary className="text-[9px] font-black text-white/20 uppercase tracking-widest cursor-pointer hover:text-white/40 transition-colors mb-3">Prompt Tips ▼</summary>
             <div className="text-[9px] leading-relaxed text-white/20 space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-              <div><span className="text-white/40 font-bold">Wing states ></span> spread wings · folded wings · dorsal view · ventral view · lateral view · perched · in flight · hovering · landing</div>
-              <div><span className="text-white/40 font-bold">Camera angles ></span> top-down / bird's-eye · side profile · 45° angle · macro close-up · eye-level · low angle · flat lay · specimen-style</div>
-              <div><span className="text-white/40 font-bold">Composition ></span> rule of thirds · negative space · centered specimen · diagonal flow · framed by foliage · shallow depth of field</div>
+              <div><span className="text-white/40 font-bold">{'Wing states \u203A'}</span> spread wings · folded wings · dorsal view · ventral view · lateral view · perched · in flight · hovering · landing</div>
+              <div><span className="text-white/40 font-bold">{'Camera angles \u203A'}</span> top-down / bird's-eye · side profile · 45\u00B0 angle · macro close-up · eye-level · low angle · flat lay · specimen-style</div>
+              <div><span className="text-white/40 font-bold">{'Composition \u203A'}</span> rule of thirds · negative space · centered specimen · diagonal flow · framed by foliage · shallow depth of field</div>
             </div>
           </details>
         </section>
