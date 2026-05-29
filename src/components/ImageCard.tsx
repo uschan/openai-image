@@ -140,7 +140,11 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
       {/* Info Panel Below Card */}
       <div className="px-1 space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-black uppercase tracking-[0.1em] text-white/90 truncate mr-4" title={image.subject}>
+          <h4 
+            className="text-sm font-black uppercase tracking-[0.1em] text-white/90 truncate mr-4 cursor-pointer hover:text-accent transition-colors" 
+            title={image.subject + ' — click to copy'}
+            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(image.subject || ''); }}
+          >
             {image.subject || "Untitled Synthesis"}
           </h4>
           <span className="text-[10px] font-mono text-white/20 whitespace-nowrap">
