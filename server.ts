@@ -161,7 +161,7 @@ async function startServer() {
 
   // APIMart Image Generation Proxy
   app.post("/api/generate", async (req, res) => {
-    const { prompt, model, size, resolution } = req.body;
+    const { prompt, model, size, resolution, image_urls } = req.body;
     const apiKey = process.env.APIMART_API_KEY;
 
     if (!apiKey) {
@@ -182,8 +182,9 @@ async function startServer() {
       const response = await axios.post(`${APIMART_BASE_URL}/v1/images/generations`, {
         model: apiModel,
         prompt: prompt,
-        size: size, // "1:1", "4:3", etc.
-        resolution: resolution // "1k", "2k", "4k"
+        size: size,
+        resolution: resolution,
+        ...(image_urls?.length ? { image_urls } : {}),
       }, {
         headers: {
           "Content-Type": "application/json",

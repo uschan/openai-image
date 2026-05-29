@@ -48,6 +48,7 @@ export default function App() {
   const [showSearch, setShowSearch] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [sessionStart] = useState(Date.now());
   const [sessionTime, setSessionTime] = useState("00:00:00");
@@ -219,7 +220,7 @@ export default function App() {
     setIsGenerating(true);
     setGenerationStats(prev => ({ ...prev, totalAttempts: prev.totalAttempts + 1 }));
     try {
-      const gr = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: finalPrompt, model: activeModel, size: aspectRatio, resolution }) });
+      const gr = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: finalPrompt, model: activeModel, size: aspectRatio, resolution, image_urls: referenceImages }) });
       const gd = await gr.json();
       if (!gr.ok || !gd.data?.[0]?.task_id) throw new Error(gd.error || "Generation failed");
       const taskId = gd.data[0].task_id;
@@ -324,10 +325,11 @@ export default function App() {
           {activeTab === 'workspace' && (
             <RightSidebar
               subject={subject} setSubject={setSubject} promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate}
-              finalPrompt={finalPrompt} templates={templates} activeModel={activeModel} setActiveModel={setActiveModel}
+              templates={templates} activeModel={activeModel} setActiveModel={setActiveModel}
               aspectRatio={aspectRatio} setAspectRatio={setAspectRatio} resolution={resolution} setResolution={setResolution}
               generateImage={generateImage} isGenerating={isGenerating} enhanceLoading={enhanceLoading}
               handleEnhancePrompt={handleEnhancePrompt} setShowTemplateLibrary={setShowTemplateLibrary}
+              referenceImages={referenceImages} setReferenceImages={setReferenceImages}
             />
           )}
         </div>
