@@ -13,7 +13,7 @@ const CATEGORIES_FILE = path.join(__dirname, "categories.json");
 const STATS_FILE = path.join(__dirname, "stats.json");
 const DOWNLOADS_DIR = path.join(__dirname, "downloads");
 
-const APIMART_BASE_URL = "https://api.apimart.ai";
+const APIMART_BASE_URL = "https://api.aishuch.com";
 
 // Helper function to read json safely
 const readJson = async (file: string, defaultData: any) => {

@@ -13,6 +13,7 @@ import { RightSidebar } from './components/RightSidebar';
 import { ImageGrid } from './components/ImageGrid';
 import { HistoryTab } from './components/HistoryTab';
 import { ModelsTab } from './components/ModelsTab';
+import { SubjectLightbox } from './components/SubjectLightbox';
 import { TemplateLibrary } from './components/TemplateLibrary';
 
 export default function App() {
@@ -49,6 +50,8 @@ export default function App() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const [groupBySubject, setGroupBySubject] = useState(true);
+  const [lightboxSubject, setLightboxSubject] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [sessionStart] = useState(Date.now());
   const [sessionTime, setSessionTime] = useState("00:00:00");
@@ -307,6 +310,7 @@ export default function App() {
                 searchQuery={searchQuery} showSearch={showSearch} setShowSearch={setShowSearch} setSearchQuery={setSearchQuery}
                 selectMode={selectMode} setSelectMode={setSelectMode} selectedIds={selectedIds} setSelectedIds={setSelectedIds}
                 onDelete={handleDeleteImage} onGeneratePost={handleGeneratePost} onBatchMove={handleBatchMove} onToggleFlag={handleToggleFlag}
+                groupBySubject={groupBySubject} setGroupBySubject={setGroupBySubject} setLightboxSubject={setLightboxSubject}
               />
               <TemplateLibrary
                 showTemplateLibrary={showTemplateLibrary} setShowTemplateLibrary={setShowTemplateLibrary}
@@ -342,6 +346,18 @@ export default function App() {
           </div>
         </footer>
       </div>
+
+      {lightboxSubject && (
+        <SubjectLightbox
+          subject={lightboxSubject}
+          images={images.filter(i => i.subject === lightboxSubject)}
+          categoryName={(catId) => categories.find(c => c.id === catId)?.name || 'Uncategorized'}
+          onDelete={handleDeleteImage}
+          onGeneratePost={handleGeneratePost}
+          onToggleFlag={handleToggleFlag}
+          onClose={() => setLightboxSubject(null)}
+        />
+      )}
 
       <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
         {activeId && dragType === 'category' ? (

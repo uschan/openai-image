@@ -19,12 +19,16 @@ interface ImageGridProps {
   onGeneratePost: (id: string, prompt: string) => void;
   onBatchMove: (id: string, categoryId: string, localUrl: string) => void;
   onToggleFlag: (id: string) => void;
+  groupBySubject: boolean;
+  setGroupBySubject: (v: boolean) => void;
+  setLightboxSubject: (v: string | null) => void;
 }
 
 export function ImageGrid({
   images, categories, selectedCategory, searchQuery, showSearch, setShowSearch,
   setSearchQuery, selectMode, setSelectMode, selectedIds, setSelectedIds,
   onDelete, onGeneratePost, onBatchMove, onToggleFlag,
+  groupBySubject, setGroupBySubject, setLightboxSubject,
 }: ImageGridProps) {
 
   const filtered = images
@@ -66,6 +70,12 @@ export function ImageGrid({
             >
               {selectMode ? 'Exit Select' : 'Select Mode'}
             </button>
+            <button
+              onClick={() => setGroupBySubject(!groupBySubject)}
+              className={`text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${groupBySubject ? 'bg-accent/20 border-accent text-accent' : 'border-white/10 text-white/30 hover:text-white hover:border-white/30'}`}
+            >
+              Group
+            </button>
             {selectMode && selectedIds.size > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-white/50">{selectedIds.size} selected</span>
@@ -105,23 +115,47 @@ export function ImageGrid({
 
           {/* Grid */}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
-            {sorted.map(image => (
+            {groupBySubject ? (
+              // Grouped view: one representative card per subject
+              (() => {
+                const groups = new Map<string, GeneratedImage[]>();
+                for (const img of sorted) {
+                  const key = img.subject || 'Untitled';
+                  if (!groups.has(key)) groups.set(key, []);
+                  groups.get(key)!.push(img);
+                }
+                return Array.from(groups.entries()).map(([subj, imgs]) => {
+                  const latest = imgs[0]; // newest first due to sort
+                  return (
+                    <div key={subj} className="cursor-pointer" onClick={() => setLightboxSubject?.(subj)}>
+                      <ImageCard
+                        image={{ ...latest, subject: `${subj}  (${imgs.length})` }}
+                        categoryName={categories.find(c => c.id === latest.categoryId)?.name}
+                        onDelete={onDelete}
+                        onGeneratePost={onGeneratePost}
+                        onToggleFlag={onToggleFlag}
+                      />
+                    </div>
+                  );
+                });
+              })()
+            ) : (
+              sorted.map(image => (
                 <ImageCard
                   key={image.id} image={image}
                   categoryName={categories.find(c => c.id === image.categoryId)?.name}
                   onDelete={onDelete} onGeneratePost={onGeneratePost}
                   selectMode={selectMode}
                   isSelected={selectedIds.has(image.id)}
-                  onToggleSelect={() => {
-                    setSelectedIds(prev => {
-                      const next = new Set(prev);
-                      if (next.has(image.id)) next.delete(image.id); else next.add(image.id);
-                      return next;
-                    });
-                  }}
+                  onToggleSelect={() => setSelectedIds(prev => {
+                    const next = new Set(prev);
+                    if (next.has(image.id)) next.delete(image.id); else next.add(image.id);
+                    return next;
+                  })}
                   onToggleFlag={() => onToggleFlag(image.id)}
                 />
-              ))}
+              ))
+            )}
           </div>
 
           {sorted.length === 0 && images.length > 0 && (
