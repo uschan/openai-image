@@ -31,17 +31,6 @@ export function ImageGrid({
   groupBySubject, setGroupBySubject, setLightboxSubject,
 }: ImageGridProps) {
 
-  // Pre-compute groups for group-by-subject view
-  const subjectGroups = (() => {
-    const groups = new Map<string, GeneratedImage[]>();
-    for (const img of sorted) {
-      const key = img.subject || 'Untitled';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(img);
-    }
-    return Array.from(groups.entries());
-  })();
-
   const filtered = images
     .filter(img => {
       if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
@@ -53,6 +42,17 @@ export function ImageGrid({
     });
 
   const sorted = [...filtered].sort((a, b) => b.timestamp - a.timestamp);
+
+  // Pre-compute groups for group-by-subject view
+  const subjectGroups = (() => {
+    const groups = new Map<string, GeneratedImage[]>();
+    for (const img of sorted) {
+      const key = img.subject || 'Untitled';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(img);
+    }
+    return Array.from(groups.entries());
+  })();
 
   return (
     <main className="flex-1 flex flex-col bg-editorial-800 relative">
