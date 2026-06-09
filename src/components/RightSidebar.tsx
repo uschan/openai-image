@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import { Sparkles, Loader2, Zap, GripVertical, ImagePlus, X } from 'lucide-react';
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -22,7 +22,7 @@ interface RightSidebarProps {
   handleEnhancePrompt: () => void;
   setShowTemplateLibrary: (v: boolean) => void;
   referenceImages: string[];
-  setReferenceImages: (v: string[]) => void;
+  setReferenceImages: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export function RightSidebar({

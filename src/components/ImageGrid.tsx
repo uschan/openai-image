@@ -31,6 +31,17 @@ export function ImageGrid({
   groupBySubject, setGroupBySubject, setLightboxSubject,
 }: ImageGridProps) {
 
+  // Pre-compute groups for group-by-subject view
+  const subjectGroups = (() => {
+    const groups = new Map<string, GeneratedImage[]>();
+    for (const img of sorted) {
+      const key = img.subject || 'Untitled';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(img);
+    }
+    return Array.from(groups.entries());
+  })();
+
   const filtered = images
     .filter(img => {
       if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
@@ -116,42 +127,34 @@ export function ImageGrid({
           {/* Grid */}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
             {groupBySubject ? (
-              // Grouped view: one representative card per subject
-              (() => {
-                const groups = new Map<string, GeneratedImage[]>();
-                for (const img of sorted) {
-                  const key = img.subject || 'Untitled';
-                  if (!groups.has(key)) groups.set(key, []);
-                  groups.get(key)!.push(img);
-                }
-                return Array.from(groups.entries()).map(([subj, imgs]) => {
-                  const latest = imgs[0];
-                  const allIds = imgs.map(i => i.id);
-                  const allSelected = allIds.every(id => selectedIds.has(id));
-                  const someSelected = allIds.some(id => selectedIds.has(id));
-                  const handleToggle = () => {
-                    setSelectedIds(prev => {
-                      const next = new Set(prev);
-                      if (allSelected) { allIds.forEach(id => next.delete(id)); }
-                      else { allIds.forEach(id => next.add(id)); }
-                      return next;
-                    });
-                  };
-                  return (
-                    <div key={subj} className="cursor-pointer" onClick={() => { selectMode ? handleToggle() : setLightboxSubject?.(subj); }}>
-                      <ImageCard
-                        image={{ ...latest, subject: `${subj}  (${imgs.length})` }}
-                        categoryName={categories.find(c => c.id === latest.categoryId)?.name}
-                        onDelete={onDelete}
-                        onGeneratePost={onGeneratePost}
-                        onToggleFlag={onToggleFlag}
-                        selectMode={selectMode}
-                        isSelected={someSelected}
-                        onToggleSelect={handleToggle}
-                      />
-                    </div>
-                  );
-              })()
+              subjectGroups.map(([subj, imgs]) => {
+                const latest = imgs[0];
+                const allIds = imgs.map(i => i.id);
+                const allSelected = allIds.every(id => selectedIds.has(id));
+                const someSelected = allIds.some(id => selectedIds.has(id));
+                const handleToggle = () => {
+                  setSelectedIds(prev => {
+                    const next = new Set(prev);
+                    if (allSelected) { allIds.forEach(id => next.delete(id)); }
+                    else { allIds.forEach(id => next.add(id)); }
+                    return next;
+                  });
+                };
+                return (
+                  <div key={subj} className="cursor-pointer" onClick={() => { selectMode ? handleToggle() : setLightboxSubject?.(subj); }}>
+                    <ImageCard
+                      image={{ ...latest, subject: `${subj}  (${imgs.length})` }}
+                      categoryName={categories.find(c => c.id === latest.categoryId)?.name}
+                      onDelete={onDelete}
+                      onGeneratePost={onGeneratePost}
+                      onToggleFlag={onToggleFlag}
+                      selectMode={selectMode}
+                      isSelected={someSelected}
+                      onToggleSelect={handleToggle}
+                    />
+                  </div>
+                );
+              })
             ) : (
               sorted.map(image => (
                 <ImageCard

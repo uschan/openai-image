@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, FolderOpen, Plus, Layers, Flower2, Utensils, BookOpen, Leaf, Shell, Palette, Bug, Dog, Fish, Camera, Star } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
