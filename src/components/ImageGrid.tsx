@@ -125,19 +125,32 @@ export function ImageGrid({
                   groups.get(key)!.push(img);
                 }
                 return Array.from(groups.entries()).map(([subj, imgs]) => {
-                  const latest = imgs[0]; // newest first due to sort
+                  const latest = imgs[0];
+                  const allIds = imgs.map(i => i.id);
+                  const allSelected = allIds.every(id => selectedIds.has(id));
+                  const someSelected = allIds.some(id => selectedIds.has(id));
+                  const handleToggle = () => {
+                    setSelectedIds(prev => {
+                      const next = new Set(prev);
+                      if (allSelected) { allIds.forEach(id => next.delete(id)); }
+                      else { allIds.forEach(id => next.add(id)); }
+                      return next;
+                    });
+                  };
                   return (
-                    <div key={subj} className="cursor-pointer" onClick={() => setLightboxSubject?.(subj)}>
+                    <div key={subj} className="cursor-pointer" onClick={() => { selectMode ? handleToggle() : setLightboxSubject?.(subj); }}>
                       <ImageCard
                         image={{ ...latest, subject: `${subj}  (${imgs.length})` }}
                         categoryName={categories.find(c => c.id === latest.categoryId)?.name}
                         onDelete={onDelete}
                         onGeneratePost={onGeneratePost}
                         onToggleFlag={onToggleFlag}
+                        selectMode={selectMode}
+                        isSelected={someSelected}
+                        onToggleSelect={handleToggle}
                       />
                     </div>
                   );
-                });
               })()
             ) : (
               sorted.map(image => (
