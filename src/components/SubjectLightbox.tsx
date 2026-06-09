@@ -14,7 +14,7 @@ interface SubjectLightboxProps {
 
 export function SubjectLightbox({ subject, images, categoryName, onDelete, onGeneratePost, onToggleFlag, onClose }: SubjectLightboxProps) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col" onClick={onClose}>
+    <div className="fixed inset-0 lg:right-80 z-50 bg-black/80 backdrop-blur-md flex flex-col" onClick={onClose}>
       <div className="flex items-center justify-between px-8 py-4 border-b border-white/10 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-black uppercase tracking-wider text-white">{subject} <span className="text-white/30 text-sm">({images.length})</span></h2>
         <button onClick={onClose} className="p-2 text-white/40 hover:text-white transition-colors rounded-full hover:bg-white/10">
