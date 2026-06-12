@@ -177,14 +177,37 @@ async function startServer() {
     } else if (model.includes("Gemini")) {
       apiModel = "gemini-3-pro-image-preview";
     } else if (model.includes("Stable") || model.includes("XL")) {
-      apiModel = "gpt-image-2"; // Fallback to GPT-Image-2 as a high quality default
+      apiModel = "gpt-image-2";
     }
+
+    // Force exact pixel dimensions for known ratios at each resolution
+    const SIZE_MAP: Record<string, Record<string, string>> = {
+      "2k": {
+        "1:1": "2048x2048", "3:2": "2048x1360", "2:3": "1360x2048",
+        "4:3": "2048x1536", "3:4": "1536x2048", "5:4": "2560x2048",
+        "4:5": "2048x2560", "16:9": "2048x1152", "9:16": "1152x2048",
+        "2:1": "2688x1344", "1:2": "1344x2688",
+      },
+      "1k": {
+        "1:1": "1024x1024", "3:2": "1536x1024", "2:3": "1024x1536",
+        "4:3": "1024x768", "3:4": "768x1024", "5:4": "1280x1024",
+        "4:5": "1024x1280", "16:9": "1536x864", "9:16": "864x1536",
+        "2:1": "2048x1024", "1:2": "1024x2048",
+      },
+      "4k": {
+        "1:1": "2880x2880", "3:2": "3520x2336", "2:3": "2336x3520",
+        "4:3": "3312x2480", "3:4": "2480x3312", "5:4": "3216x2576",
+        "4:5": "2576x3216", "16:9": "3840x2160", "9:16": "2160x3840",
+        "2:1": "3840x1920", "1:2": "1920x3840",
+      },
+    };
+    const actualSize = SIZE_MAP[resolution]?.[size] || size;
 
     try {
       const response = await axios.post(`${APIMART_BASE_URL}/v1/images/generations`, {
         model: apiModel,
         prompt: prompt,
-        size: size,
+        size: actualSize,
         resolution: resolution,
         ...(image_urls?.length ? { image_urls } : {}),
       }, {
