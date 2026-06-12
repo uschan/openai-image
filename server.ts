@@ -13,7 +13,7 @@ const CATEGORIES_FILE = path.join(__dirname, "categories.json");
 const STATS_FILE = path.join(__dirname, "stats.json");
 const DOWNLOADS_DIR = path.join(__dirname, "downloads");
 
-const APIMART_BASE_URL = "https://api.aishuch.com";
+const APIMART_BASE_URL = "https://api.aiuxu.com";
 
 // Helper function to read json safely
 const readJson = async (file: string, defaultData: any) => {
@@ -172,7 +172,9 @@ async function startServer() {
     // GPT-Image-2 -> gpt-image-2
     // Gemini-3-Pro -> gemini-3-pro-image-preview
     let apiModel = "gpt-image-2";
-    if (model.includes("Gemini")) {
+    if (model === "GPT-IMAGE-OFFICIAL") {
+      apiModel = "gpt-image-2-official";
+    } else if (model.includes("Gemini")) {
       apiModel = "gemini-3-pro-image-preview";
     } else if (model.includes("Stable") || model.includes("XL")) {
       apiModel = "gpt-image-2"; // Fallback to GPT-Image-2 as a high quality default

@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Sparkles, Loader2, Zap, GripVertical, ImagePlus, X } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Sparkles, Loader2, Zap, GripVertical, ImagePlus, X, Link } from 'lucide-react';
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Template } from '../types';
@@ -32,6 +32,7 @@ export function RightSidebar({
   handleEnhancePrompt, setShowTemplateLibrary, referenceImages, setReferenceImages,
 }: RightSidebarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [urlInput, setUrlInput] = useState('');
 
   const addImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -91,6 +92,26 @@ export function RightSidebar({
             <ImagePlus className="w-5 h-5 text-white/20 mx-auto mb-1" />
             <span className="text-[10px] text-white/20">Drop or click to upload ({referenceImages.length}/16)</span>
             <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={addImage} />
+          </div>
+          <div className="flex gap-1 mt-2">
+            <input
+              type="text" value={urlInput} onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="or paste image URL..."
+              className="flex-1 bg-editorial-900/50 border border-white/5 rounded-lg px-2 py-1 text-[10px] text-white/60 focus:border-accent/20 focus:ring-0"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && urlInput.trim()) {
+                  setReferenceImages(prev => [...prev, urlInput.trim()]);
+                  setUrlInput('');
+                }
+              }}
+            />
+            <button
+              disabled={!urlInput.trim()}
+              onClick={() => { setReferenceImages(prev => [...prev, urlInput.trim()]); setUrlInput(''); }}
+              className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] text-white/40 hover:text-white disabled:opacity-20"
+            >
+              <Link className="w-3 h-3" />
+            </button>
           </div>
           {referenceImages.length > 0 && (
             <div className="flex gap-2 mt-3 flex-wrap">
@@ -164,6 +185,7 @@ export function RightSidebar({
             className="w-full bg-editorial-900/50 border border-white/5 rounded-xl px-4 py-3 text-[10px] font-black text-white/80 uppercase tracking-widest outline-none focus:border-accent/40 cursor-pointer"
           >
             <option value="GPT-IMAGE">GPT-IMAGE</option>
+            <option value="GPT-IMAGE-OFFICIAL">GPT-IMAGE (Official)</option>
             <option value="GEMINI">GEMINI (Banana)</option>
           </select>
         </section>

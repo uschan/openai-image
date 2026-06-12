@@ -15,7 +15,7 @@ export function ModelsTab({ activeModel, setActiveTab }: ModelsTabProps) {
           <p className="text-xs font-bold text-white/40 uppercase tracking-widest">Neural engines are managed directly in your Workspace panel.</p>
         </div>
         <div className="grid grid-cols-1 gap-4">
-          {['GPT-IMAGE', 'GEMINI (Banana)'].map(m => (
+          {['GPT-IMAGE', 'GPT-IMAGE-OFFICIAL', 'GEMINI (Banana)'].map(m => (
             <div key={m} className={`p-6 rounded-2xl border flex items-center justify-between ${activeModel === m ? 'border-accent bg-accent/5' : 'border-white/10 bg-white/5'}`}>
               <span className="font-bold tracking-widest text-sm">{m}</span>
               {activeModel === m && <span className="text-[9px] px-2 py-1 bg-accent text-black rounded uppercase font-black">Active</span>}
