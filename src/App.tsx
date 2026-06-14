@@ -162,7 +162,7 @@ export default function App() {
     const img = images.find(i => i.id === id);
     setImages(prev => prev.filter(i => i.id !== id));
     if (img?.localUrl) {
-      try { await fetch("/api/delete-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ localUrl: img.localUrl }) }); } catch {}
+      try { await fetch("/api/delete-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ localUrl: img.localUrl }) }); } catch (e) { console.error('Delete file failed:', e); }
     }
   };
 

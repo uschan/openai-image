@@ -107,7 +107,9 @@ export function ImageGrid({
                           if (data.localUrl) {
                             onBatchMove(id, catId, data.localUrl);
                           }
-                        } catch {}
+                        } catch (e) {
+                          console.error('Batch move failed:', e);
+                        }
                       }
                     }
                     setSelectedIds(new Set());
