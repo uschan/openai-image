@@ -225,6 +225,16 @@ export default function App() {
     try {
       const gr = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: finalPrompt, model: activeModel, size: aspectRatio, resolution, image_urls: referenceImages }) });
       const gd = await gr.json();
+
+      // apikey.fun returns completed image directly via SSE
+      if (gd.provider === "apikeyfun" && gd.localUrl) {
+        const internalId = Math.random().toString(36).substr(2, 9);
+        setImages(prev => [{ id: internalId, url: "", localUrl: gd.localUrl, subject, prompt: finalPrompt, timestamp: Date.now(), status: 'completed', isSaved: true, categoryId: 'uncategorized', metadata: { model: activeModel, ratio: aspectRatio, resolution } } as GeneratedImage, ...prev]);
+        setIsGenerating(false);
+        setGenerationStats(prev => ({ ...prev, successful: prev.successful + 1 }));
+        return;
+      }
+
       if (!gr.ok || !gd.data?.[0]?.task_id) throw new Error(gd.error || "Generation failed");
       const taskId = gd.data[0].task_id;
       const internalId = Math.random().toString(36).substr(2, 9);

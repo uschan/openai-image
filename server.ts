@@ -186,28 +186,77 @@ async function startServer() {
       return res.status(500).json({ error: "API key not configured for selected model" });
     }
 
-    // Force exact pixel dimensions for known ratios at each resolution
     const SIZE_MAP: Record<string, Record<string, string>> = {
-      "2k": {
-        "1:1": "2048x2048", "3:2": "2048x1360", "2:3": "1360x2048",
-        "4:3": "2048x1536", "3:4": "1536x2048", "5:4": "2560x2048",
-        "4:5": "2048x2560", "16:9": "2048x1152", "9:16": "1152x2048",
-        "2:1": "2688x1344", "1:2": "1344x2688",
-      },
-      "1k": {
-        "1:1": "1024x1024", "3:2": "1536x1024", "2:3": "1024x1536",
-        "4:3": "1024x768", "3:4": "768x1024", "5:4": "1280x1024",
-        "4:5": "1024x1280", "16:9": "1536x864", "9:16": "864x1536",
-        "2:1": "2048x1024", "1:2": "1024x2048",
-      },
-      "4k": {
-        "1:1": "2880x2880", "3:2": "3520x2336", "2:3": "2336x3520",
-        "4:3": "3312x2480", "3:4": "2480x3312", "5:4": "3216x2576",
-        "4:5": "2576x3216", "16:9": "3840x2160", "9:16": "2160x3840",
-        "2:1": "3840x1920", "1:2": "1920x3840",
-      },
+      "2k": { "1:1": "2048x2048", "3:2": "2048x1360", "2:3": "1360x2048", "4:3": "2048x1536", "3:4": "1536x2048", "5:4": "2560x2048", "4:5": "2048x2560", "16:9": "2048x1152", "9:16": "1152x2048", "2:1": "2688x1344", "1:2": "1344x2688" },
+      "1k": { "1:1": "1024x1024", "3:2": "1536x1024", "2:3": "1024x1536", "4:3": "1024x768", "3:4": "768x1024", "5:4": "1280x1024", "4:5": "1024x1280", "16:9": "1536x864", "9:16": "864x1536", "2:1": "2048x1024", "1:2": "1024x2048" },
+      "4k": { "1:1": "2880x2880", "3:2": "3520x2336", "2:3": "2336x3520", "4:3": "3312x2480", "3:4": "2480x3312", "5:4": "3216x2576", "4:5": "2576x3216", "16:9": "3840x2160", "9:16": "2160x3840", "2:1": "3840x1920", "1:2": "1920x3840" },
     };
     const actualSize = SIZE_MAP[resolution]?.[size] || size;
+
+    // apikey.fun uses SSE streaming — handle synchronously
+    if (model === "APIKEYFUN") {
+      try {
+        const sseRes = await fetch(`${baseUrl}/v1/images/generations`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+          },
+          body: JSON.stringify({
+            model: apiModel,
+            prompt,
+            n: 1,
+            size: actualSize,
+            stream: true,
+            response_format: "b64_json",
+          }),
+        });
+        if (!sseRes.ok) {
+          const errText = await sseRes.text();
+          return res.status(sseRes.status).json({ error: errText });
+        }
+
+        const reader = sseRes.body!.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let b64 = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const frames = buffer.split(/\r?\n\r?\n/);
+          buffer = frames.pop() || "";
+          for (const frame of frames) {
+            const lines = frame.split(/\r?\n/).filter(l => l.startsWith("data:"));
+            const data = lines.map(l => l.slice(5).trim()).join("\n");
+            if (!data || data === "[DONE]") continue;
+            try {
+              const event = JSON.parse(data);
+              if (event.type === "image_generation.completed") {
+                b64 = event.b64_json || event.data?.[0]?.b64_json || "";
+              }
+            } catch {}
+          }
+        }
+
+        if (!b64) {
+          return res.status(500).json({ error: "No image data in SSE stream" });
+        }
+
+        const slug = (prompt || "image").slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        const filename = `${Date.now()}_${slug}.png`;
+        const filepath = path.join(DOWNLOADS_DIR, filename);
+        await fs.writeFile(filepath, Buffer.from(b64, "base64"));
+        const localUrl = `/downloads/${filename}`;
+
+        return res.json({ provider: "apikeyfun", localUrl, prompt, subject: prompt.slice(0, 40) });
+      } catch (e: any) {
+        console.error("apikeyfun SSE error:", e);
+        return res.status(500).json({ error: e.message || "SSE generation failed" });
+      }
+    }
 
     try {
       const response = await axios.post(`${baseUrl}/v1/images/generations`, {
@@ -223,7 +272,6 @@ async function startServer() {
         }
       });
 
-      console.log("[generate] data[0]:", JSON.stringify(response.data?.data?.[0]));
       res.json(response.data);
     } catch (error: any) {
       console.error("APIMart Generation Error:", error.response?.data || error.message);
@@ -254,7 +302,9 @@ async function startServer() {
           "Authorization": `Bearer ${apiKey}`
         }
       });
-      console.log("[query] response keys:", Object.keys(response.data));
+
+      res.json(response.data);
+
       res.json(response.data);
     } catch (error: any) {
       console.error("APIMart Query Error:", error.response?.data || error.message);
