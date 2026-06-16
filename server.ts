@@ -210,7 +210,7 @@ async function startServer() {
     const actualSize = SIZE_MAP[resolution]?.[size] || size;
 
     try {
-        const response = await axios.post(`${baseUrl}/v1/images/generations`, {
+      const response = await axios.post(`${baseUrl}/v1/images/generations`, {
         model: apiModel,
         prompt: prompt,
         size: actualSize,
@@ -223,7 +223,7 @@ async function startServer() {
         }
       });
 
-      // Returns task_id
+      console.log("[generate] response keys:", Object.keys(response.data));
       res.json(response.data);
     } catch (error: any) {
       console.error("APIMart Generation Error:", error.response?.data || error.message);
@@ -254,7 +254,7 @@ async function startServer() {
           "Authorization": `Bearer ${apiKey}`
         }
       });
-
+      console.log("[query] response keys:", Object.keys(response.data));
       res.json(response.data);
     } catch (error: any) {
       console.error("APIMart Query Error:", error.response?.data || error.message);
