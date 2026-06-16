@@ -196,23 +196,23 @@ async function startServer() {
     // apikey.fun uses SSE streaming — handle synchronously
     if (model === "APIKEYFUN") {
       try {
+        // Try without stream/response_format for potential async mode
         const sseRes = await fetch(`${baseUrl}/v1/images/generations`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${apiKey}`,
             "Content-Type": "application/json",
-            Accept: "text/event-stream",
           },
           body: JSON.stringify({
             model: apiModel,
             prompt,
             n: 1,
-            size,
-            resolution,
-            stream: true,
-            response_format: "b64_json",
+            size: actualSize,
           }),
         });
+        console.log("[apikeyfun] status:", sseRes.status, "content-type:", sseRes.headers.get("content-type"));
+        const text = await sseRes.text();
+        console.log("[apikeyfun] response:", text.slice(0, 200));
         if (!sseRes.ok) {
           const errText = await sseRes.text();
           return res.status(sseRes.status).json({ error: errText });
