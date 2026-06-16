@@ -184,8 +184,8 @@ export function ImageGrid({
 
           {images.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
-              <h2 className="text-5xl font-light serif-italic italic tracking-tight text-white/20">The Canvas is Empty.</h2>
-              <p className="mt-4 label-caps tracking-[0.4em]">Awaiting Visionary Input</p>
+              <h2 className="text-5xl font-light serif-italic italic tracking-tight text-white/20">No images yet.</h2>
+              <p className="mt-4 label-caps tracking-[0.4em]">Generate your first subject</p>
             </div>
           )}
         </div>

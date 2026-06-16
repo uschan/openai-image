@@ -10,8 +10,8 @@ export function HistoryTab({ generationStats, images }: HistoryTabProps) {
     <main className="flex-1 overflow-y-auto px-10 py-12 custom-scrollbar bg-editorial-800">
       <div className="max-w-4xl mx-auto space-y-10">
         <div>
-          <h2 className="text-3xl font-light serif-italic italic mb-2">History & Pulse</h2>
-          <p className="text-xs font-bold text-white/30 uppercase tracking-widest">Daily Synthesis Statistics</p>
+          <h2 className="text-3xl font-light serif-italic italic mb-2">Statistics</h2>
+          <p className="text-xs font-bold text-white/30 uppercase tracking-widest">Generation activity</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[

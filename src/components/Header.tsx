@@ -21,14 +21,15 @@ export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme, on
           野盐の物语
         </div>
         <nav className="hidden md:flex gap-8 text-xs font-bold uppercase tracking-wider text-white/30">
-          {(['workspace', 'assets', 'models', 'history'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`h-14 translate-y-[2px] transition-colors ${activeTab === tab ? 'text-white border-b-2 border-accent' : 'hover:text-white'}`}
-            >
-              {tab}
-            </button>
+          {(['Workspace', 'Library', 'Models', 'Stats'] as const).map((tab, i) => {
+            const key = (['workspace', 'assets', 'models', 'history'] as const)[i];
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`h-14 translate-y-[2px] transition-colors ${activeTab === key ? 'text-white border-b-2 border-accent' : 'hover:text-white'}`}
+              >
+                {tab}
+              </button>
           ))}
         </nav>
       </div>

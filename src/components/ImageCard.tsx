@@ -46,9 +46,10 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
       draggable={image.status === 'completed' && !selectMode}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.25 }}
       className={`group relative flex flex-col gap-4 ${selectMode ? 'cursor-pointer' : ''}`}
       onClick={() => { if (selectMode && onToggleSelect) onToggleSelect(); }}
     >

@@ -354,10 +354,9 @@ export default function App() {
         </div>
 
         <footer className="h-8 bg-black border-t border-white/10 flex items-center px-6 justify-between text-[9px] font-bold uppercase tracking-[0.2em] text-white/20">
-          <div className="flex gap-8"><span>Active Session: {sessionTime}</span><span>Buffer Health: 100%</span></div>
+          <div className="flex gap-8"><span>Active Session: {sessionTime}</span><span>Images: {images.length}</span></div>
           <div className="flex gap-6 items-center">
-            <div className="flex items-center gap-1.5"><div className="w-1 h-1 bg-green-500 rounded-full shadow-[0_0_5px_rgba(34,197,94,1)] animate-pulse" />Synchronized</div>
-            <span>WildSalt v1.0-beta</span>
+            <span>WildSalt v1.2</span>
           </div>
         </footer>
       </div>
