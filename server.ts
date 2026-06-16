@@ -223,7 +223,7 @@ async function startServer() {
         }
       });
 
-      console.log("[generate] response keys:", Object.keys(response.data));
+      console.log("[generate] data[0]:", JSON.stringify(response.data?.data?.[0]));
       res.json(response.data);
     } catch (error: any) {
       console.error("APIMart Generation Error:", error.response?.data || error.message);
