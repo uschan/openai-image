@@ -163,11 +163,6 @@ async function startServer() {
   // APIMart Image Generation Proxy
   app.post("/api/generate", async (req, res) => {
     const { prompt, model, size, resolution, image_urls } = req.body;
-    const apiKey = process.env.APIMART_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({ error: "APIMART_API_KEY is not configured" });
-    }
 
     // Map models to APIMart IDs
     // GPT-Image-2 -> gpt-image-2
@@ -185,6 +180,10 @@ async function startServer() {
       apiModel = "gemini-3-pro-image-preview";
     } else if (model.includes("Stable") || model.includes("XL")) {
       apiModel = "gpt-image-2";
+    }
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "API key not configured for selected model" });
     }
 
     // Force exact pixel dimensions for known ratios at each resolution
