@@ -23,6 +23,7 @@ export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme, on
         <nav className="hidden md:flex gap-8 text-xs font-bold uppercase tracking-wider text-white/30">
           {(['Workspace', 'Library', 'Models', 'Stats'] as const).map((tab, i) => {
             const key = (['workspace', 'assets', 'models', 'history'] as const)[i];
+            return (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
@@ -30,7 +31,8 @@ export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme, on
               >
                 {tab}
               </button>
-          ))}
+            );
+          })}
         </nav>
       </div>
 
