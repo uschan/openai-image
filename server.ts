@@ -196,7 +196,6 @@ async function startServer() {
     // apikey.fun uses SSE streaming — handle synchronously
     if (model === "APIKEYFUN") {
       try {
-        console.log("[apikeyfun] sending size:", actualSize, "resolution:", resolution);
         const sseRes = await fetch(`${baseUrl}/v1/images/generations`, {
           method: "POST",
           headers: {
@@ -208,7 +207,8 @@ async function startServer() {
             model: apiModel,
             prompt,
             n: 1,
-            size: actualSize,
+            size,
+            resolution,
             stream: true,
             response_format: "b64_json",
           }),
