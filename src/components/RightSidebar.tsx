@@ -186,6 +186,7 @@ export function RightSidebar({
           >
             <option value="GPT-IMAGE">GPT-IMAGE</option>
             <option value="GPT-IMAGE-OFFICIAL">GPT-IMAGE (Official)</option>
+            <option value="APIKEYFUN">GPT-IMAGE (apikey.fun)</option>
             <option value="GEMINI">GEMINI (Banana)</option>
           </select>
         </section>

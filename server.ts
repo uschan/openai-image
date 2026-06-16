@@ -14,6 +14,7 @@ const STATS_FILE = path.join(__dirname, "stats.json");
 const DOWNLOADS_DIR = path.join(__dirname, "downloads");
 
 const APIMART_BASE_URL = "https://api.aiuxu.com";
+const APIKEYFUN_BASE_URL = "https://api.apikey.fun";
 
 // Helper function to read json safely
 const readJson = async (file: string, defaultData: any) => {
@@ -172,8 +173,14 @@ async function startServer() {
     // GPT-Image-2 -> gpt-image-2
     // Gemini-3-Pro -> gemini-3-pro-image-preview
     let apiModel = "gpt-image-2";
+    let baseUrl = APIMART_BASE_URL;
+    let apiKey = process.env.APIMART_API_KEY;
     if (model === "GPT-IMAGE-OFFICIAL") {
       apiModel = "gpt-image-2-official";
+    } else if (model === "APIKEYFUN") {
+      apiModel = "gpt-image-2";
+      baseUrl = APIKEYFUN_BASE_URL;
+      apiKey = process.env.APIKEYFUN_API_KEY;
     } else if (model.includes("Gemini")) {
       apiModel = "gemini-3-pro-image-preview";
     } else if (model.includes("Stable") || model.includes("XL")) {
@@ -204,7 +211,7 @@ async function startServer() {
     const actualSize = SIZE_MAP[resolution]?.[size] || size;
 
     try {
-      const response = await axios.post(`${APIMART_BASE_URL}/v1/images/generations`, {
+        const response = await axios.post(`${baseUrl}/v1/images/generations`, {
         model: apiModel,
         prompt: prompt,
         size: actualSize,
