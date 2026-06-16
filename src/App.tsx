@@ -231,6 +231,7 @@ export default function App() {
 
       const gr = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: finalPrompt, model: activeModel, size: aspectRatio, resolution, image_urls: referenceImages }) });
       const gd = await gr.json();
+      console.log("[generate] response provider:", gd.provider, "has localUrl:", !!gd.localUrl, "keys:", Object.keys(gd));
 
       // apikey.fun SSE completed — update pending card
       if (gd.provider === "apikeyfun" && gd.localUrl) {
