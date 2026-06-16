@@ -232,7 +232,7 @@ export default function App() {
 
       const poll = async (): Promise<boolean> => {
         try {
-          const qr = await fetch(`/api/query?task_id=${taskId}`);
+          const qr = await fetch(`/api/query?task_id=${taskId}${activeModel === 'APIKEYFUN' ? '&model=APIKEYFUN' : ''}`);
           const qd = await qr.json(); const td = qd.data;
           if (!td) return false;
           if (td.status === "completed") {

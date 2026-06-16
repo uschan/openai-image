@@ -233,15 +233,23 @@ async function startServer() {
 
   // APIMart Task Query Proxy
   app.get("/api/query", async (req, res) => {
-    const { task_id } = req.query;
-    const apiKey = process.env.APIMART_API_KEY;
+    const { task_id, model } = req.query;
+
+    let baseUrl = APIMART_BASE_URL;
+    let apiKey = process.env.APIMART_API_KEY;
+    if (model === "APIKEYFUN") {
+      baseUrl = APIKEYFUN_BASE_URL;
+      apiKey = process.env.APIKEYFUN_API_KEY;
+    } else if (model === "GPT-IMAGE-OFFICIAL") {
+      apiKey = process.env.APIMART_API_KEY;
+    }
 
     if (!apiKey) {
-      return res.status(500).json({ error: "APIMART_API_KEY is not configured" });
+      return res.status(500).json({ error: "API key not configured" });
     }
 
     try {
-      const response = await axios.get(`${APIMART_BASE_URL}/v1/tasks/${task_id}`, {
+      const response = await axios.get(`${baseUrl}/v1/tasks/${task_id}`, {
         headers: {
           "Authorization": `Bearer ${apiKey}`
         }
