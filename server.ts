@@ -304,8 +304,6 @@ async function startServer() {
       });
 
       res.json(response.data);
-
-      res.json(response.data);
     } catch (error: any) {
       console.error("APIMart Query Error:", error.response?.data || error.message);
       res.status(error.response?.status || 500).json(error.response?.data || { error: "Failed to query task" });
