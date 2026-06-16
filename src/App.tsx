@@ -223,13 +223,18 @@ export default function App() {
     setIsGenerating(true);
     setGenerationStats(prev => ({ ...prev, totalAttempts: prev.totalAttempts + 1 }));
     try {
+      // Create pending card immediately for visual feedback
+      const internalId = Math.random().toString(36).substr(2, 9);
+      if (activeModel === "APIKEYFUN") {
+        setImages(prev => [{ id: internalId, url: "", subject, prompt: finalPrompt, timestamp: Date.now(), status: 'pending', isSaved: false, categoryId: 'uncategorized', metadata: { model: activeModel, ratio: aspectRatio, resolution } } as GeneratedImage, ...prev]);
+      }
+
       const gr = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: finalPrompt, model: activeModel, size: aspectRatio, resolution, image_urls: referenceImages }) });
       const gd = await gr.json();
 
-      // apikey.fun returns completed image directly via SSE
+      // apikey.fun SSE completed — update pending card
       if (gd.provider === "apikeyfun" && gd.localUrl) {
-        const internalId = Math.random().toString(36).substr(2, 9);
-        setImages(prev => [{ id: internalId, url: "", localUrl: gd.localUrl, subject, prompt: finalPrompt, timestamp: Date.now(), status: 'completed', isSaved: true, categoryId: 'uncategorized', metadata: { model: activeModel, ratio: aspectRatio, resolution } } as GeneratedImage, ...prev]);
+        setImages(prev => prev.map(img => img.id === internalId ? { ...img, status: 'completed', localUrl: gd.localUrl, isSaved: true } : img));
         setIsGenerating(false);
         setGenerationStats(prev => ({ ...prev, successful: prev.successful + 1 }));
         return;
@@ -237,8 +242,8 @@ export default function App() {
 
       if (!gr.ok || !gd.data?.[0]?.task_id) throw new Error(gd.error || "Generation failed");
       const taskId = gd.data[0].task_id;
-      const internalId = Math.random().toString(36).substr(2, 9);
-      setImages(prev => [{ id: internalId, url: "", subject, prompt: finalPrompt, timestamp: Date.now(), status: 'pending', isSaved: false, categoryId: 'uncategorized', metadata: { model: activeModel, ratio: aspectRatio, resolution } } as GeneratedImage, ...prev]);
+      const imgId = Math.random().toString(36).substr(2, 9);
+      setImages(prev => [{ id: imgId, url: "", subject, prompt: finalPrompt, timestamp: Date.now(), status: 'pending', isSaved: false, categoryId: 'uncategorized', metadata: { model: activeModel, ratio: aspectRatio, resolution } } as GeneratedImage, ...prev]);
 
       const poll = async (): Promise<boolean> => {
         try {
@@ -249,14 +254,14 @@ export default function App() {
             const url = td.result?.images?.[0]?.url?.[0];
             if (url) {
               let localUrl = "";
-              try { const sr = await fetch("/api/save-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: internalId, url, subject }) }); const sd = await sr.json(); localUrl = sd.localUrl || ""; } catch {}
-              setImages(prev => prev.map(img => img.id === internalId ? { ...img, status: 'completed', url, localUrl, isSaved: true } : img));
+              try { const sr = await fetch("/api/save-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: imgId, url, subject }) }); const sd = await sr.json(); localUrl = sd.localUrl || ""; } catch {}
+              setImages(prev => prev.map(img => img.id === imgId ? { ...img, status: 'completed', url, localUrl, isSaved: true } : img));
               setIsGenerating(false);
               setGenerationStats(prev => ({ ...prev, successful: prev.successful + 1 }));
               return true;
             }
           } else if (td.status === "failed") {
-            setImages(prev => prev.map(img => img.id === internalId ? { ...img, status: 'failed' } : img));
+            setImages(prev => prev.map(img => img.id === imgId ? { ...img, status: 'failed' } : img));
             setIsGenerating(false);
             setGenerationStats(prev => ({ ...prev, failed: prev.failed + 1 }));
             return true;
