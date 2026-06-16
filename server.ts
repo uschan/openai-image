@@ -196,8 +196,7 @@ async function startServer() {
     // apikey.fun uses SSE streaming — handle synchronously
     if (model === "APIKEYFUN") {
       try {
-        // Try without stream/response_format for potential async mode
-        const sseRes = await fetch(`${baseUrl}/v1/images/generations`, {
+        const apiRes = await fetch(`${baseUrl}/v1/images/generations`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${apiKey}`,
@@ -210,40 +209,15 @@ async function startServer() {
             size: actualSize,
           }),
         });
-        console.log("[apikeyfun] status:", sseRes.status, "content-type:", sseRes.headers.get("content-type"));
-        const text = await sseRes.text();
-        console.log("[apikeyfun] response:", text.slice(0, 200));
-        if (!sseRes.ok) {
-          const errText = await sseRes.text();
-          return res.status(sseRes.status).json({ error: errText });
+        if (!apiRes.ok) {
+          const errText = await apiRes.text();
+          return res.status(apiRes.status).json({ error: errText });
         }
 
-        const reader = sseRes.body!.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let b64 = "";
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const frames = buffer.split(/\r?\n\r?\n/);
-          buffer = frames.pop() || "";
-          for (const frame of frames) {
-            const lines = frame.split(/\r?\n/).filter(l => l.startsWith("data:"));
-            const data = lines.map(l => l.slice(5).trim()).join("\n");
-            if (!data || data === "[DONE]") continue;
-            try {
-              const event = JSON.parse(data);
-              if (event.type === "image_generation.completed") {
-                b64 = event.b64_json || event.data?.[0]?.b64_json || "";
-              }
-            } catch {}
-          }
-        }
-
+        const json = await apiRes.json();
+        const b64 = json?.data?.[0]?.b64_json;
         if (!b64) {
-          return res.status(500).json({ error: "No image data in SSE stream" });
+          return res.status(500).json({ error: "No b64_json in response" });
         }
 
         const slug = (prompt || "image").slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
@@ -254,8 +228,8 @@ async function startServer() {
 
         return res.json({ provider: "apikeyfun", localUrl, prompt, subject: prompt.slice(0, 40) });
       } catch (e: any) {
-        console.error("apikeyfun SSE error:", e);
-        return res.status(500).json({ error: e.message || "SSE generation failed" });
+        console.error("apikeyfun error:", e);
+        return res.status(500).json({ error: e.message || "Generation failed" });
       }
     }
 
