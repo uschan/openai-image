@@ -195,42 +195,59 @@ async function startServer() {
 
     // apikey.fun uses SSE streaming — handle synchronously
     if (model === "APIKEYFUN") {
-      try {
-        const apiRes = await fetch(`${baseUrl}/v1/images/generations`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: apiModel,
-            prompt,
-            n: 1,
-            size,
-          }),
-        });
-        if (!apiRes.ok) {
-          const errText = await apiRes.text();
-          return res.status(apiRes.status).json({ error: errText });
-        }
+      const apiRes = await fetch(`${baseUrl}/v1/images/generations`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "Accept": "text/event-stream",
+        },
+        body: JSON.stringify({
+          model: apiModel,
+          prompt,
+          n: 1,
+          size,
+          stream: true,
+          response_format: "b64_json",
+        }),
+      });
 
-        const json = await apiRes.json();
-        const b64 = json?.data?.[0]?.b64_json;
-        if (!b64) {
-          return res.status(500).json({ error: "No b64_json in response" });
-        }
-
-        const slug = (prompt || "image").slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        const filename = `${Date.now()}_${slug}.png`;
-        const filepath = path.join(DOWNLOADS_DIR, filename);
-        await fs.writeFile(filepath, Buffer.from(b64, "base64"));
-        const localUrl = `/downloads/${filename}`;
-
-        return res.json({ provider: "apikeyfun", localUrl, prompt, subject: prompt.slice(0, 40) });
-      } catch (e: any) {
-        console.error("apikeyfun error:", e);
-        return res.status(500).json({ error: e.message || "Generation failed" });
+      if (!apiRes.ok) {
+        return res.status(apiRes.status).json({ error: await apiRes.text() });
       }
+
+      const reader = apiRes.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split(/\r?\n\r?\n/);
+        buffer = frames.pop() || "";
+
+        for (const frame of frames) {
+          const data = frame.split(/\r?\n/)
+            .filter(line => line.startsWith("data:"))
+            .map(line => line.slice(5).trim())
+            .join("\n");
+
+          if (!data || data === "[DONE]") continue;
+
+          const event = JSON.parse(data);
+          if (event.type === "image_generation.completed") {
+            const b64 = event.b64_json || event.data?.[0]?.b64_json;
+            const slug = prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            const filename = `${Date.now()}_${slug}.png`;
+            const filepath = path.join(DOWNLOADS_DIR, filename);
+            await fs.writeFile(filepath, Buffer.from(b64, "base64"));
+            return res.json({ provider: "apikeyfun", localUrl: `/downloads/${filename}`, prompt, subject: prompt.slice(0, 40) });
+          }
+        }
+      }
+
+      return res.status(500).json({ error: "Stream ended without completed event" });
     }
 
     try {
