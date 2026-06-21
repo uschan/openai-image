@@ -202,14 +202,14 @@ async function startServer() {
           "Content-Type": "application/json",
           "Accept": "text/event-stream",
         },
-        body: JSON.stringify({
-          model: apiModel,
-          prompt,
-          n: 1,
-          size,
-          stream: true,
-          response_format: "b64_json",
-        }),
+          body: JSON.stringify({
+            model: apiModel,
+            prompt,
+            n: 1,
+            size: actualSize,
+            stream: true,
+            response_format: "b64_json",
+          }),
       });
 
       if (!apiRes.ok) {
