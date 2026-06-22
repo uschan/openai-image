@@ -50,7 +50,7 @@ async function startServer() {
     try {
       const templates = await readJson(TEMPLATES_FILE, []);
       const images = await readJson(IMAGES_FILE, []);
-      const categories = await readJson(CATEGORIES_FILE, [{id: 'all', name: 'All Syntheses', count: 0}]);
+      const categories = await readJson(CATEGORIES_FILE, [{id: 'all', name: 'All Work', count: 0}]);
       const stats = await readJson(STATS_FILE, { totalAttempts: 0, successful: 0, failed: 0 });
       res.json({ templates, images, categories, stats });
     } catch (error) {
@@ -206,7 +206,7 @@ async function startServer() {
             model: apiModel,
             prompt,
             n: 1,
-            size: actualSize,
+            size,
             stream: true,
             response_format: "b64_json",
           }),
@@ -235,7 +235,8 @@ async function startServer() {
 
           if (!data || data === "[DONE]") continue;
 
-          const event = JSON.parse(data);
+          let event: any;
+          try { event = JSON.parse(data); } catch { continue; }
           if (event.type === "image_generation.completed") {
             const b64 = event.b64_json || event.data?.[0]?.b64_json;
             const slug = prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();

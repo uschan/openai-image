@@ -4,8 +4,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Category } from '../types';
 
+const ICON_MAP: Record<string, React.ReactNode> = {
+  Layers: <Layers />, Flower2: <Flower2 />, Utensils: <Utensils />,
+  BookOpen: <BookOpen />, Leaf: <Leaf />, Palette: <Palette />, Camera: <Camera />, Star: <Star />,
+};
+
 export interface SortableCategoryProps {
-  key?: string | number;
   category: Category;
   isSelected: boolean;
   isSidebarOpen: boolean;
@@ -20,10 +24,6 @@ export function SortableCategory({
   onSelect,
   onNativeImageDrop,
 }: SortableCategoryProps) {
-  const ICON_MAP: Record<string, React.ReactNode> = {
-    Layers: <Layers />, Flower2: <Flower2 />, Utensils: <Utensils />, Shell: <Shell />,
-    BookOpen: <BookOpen />, Leaf: <Leaf />, Palette: <Palette />, Camera: <Camera />, Star: <Star />, Bug: <Bug />, Dog: <Dog />, Fish: <Fish />,
-  };
   const catIcon = ICON_MAP[category.icon || 'Layers'] || <Layers />;
   const {
     attributes,

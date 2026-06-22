@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { ImageCard } from './ImageCard';
 import type { GeneratedImage, Category } from '../types';
@@ -31,20 +31,20 @@ export function ImageGrid({
   groupBySubject, setGroupBySubject, setLightboxSubject,
 }: ImageGridProps) {
 
-  const filtered = images
-    .filter(img => {
-      if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
-        if (!searchQuery) return true;
-        const q = searchQuery.toLowerCase();
-        return (img.subject || '').toLowerCase().includes(q) || (img.prompt || '').toLowerCase().includes(q);
-      }
-      return false;
-    });
+  const sorted = useMemo(() => {
+    const filtered = images
+      .filter(img => {
+        if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
+          if (!searchQuery) return true;
+          const q = searchQuery.toLowerCase();
+          return (img.subject || '').toLowerCase().includes(q) || (img.prompt || '').toLowerCase().includes(q);
+        }
+        return false;
+      });
+    return [...filtered].sort((a, b) => b.timestamp - a.timestamp);
+  }, [images, selectedCategory, searchQuery]);
 
-  const sorted = [...filtered].sort((a, b) => b.timestamp - a.timestamp);
-
-  // Pre-compute groups for group-by-subject view
-  const subjectGroups = (() => {
+  const subjectGroups = useMemo(() => {
     const groups = new Map<string, GeneratedImage[]>();
     for (const img of sorted) {
       const key = img.subject || 'Untitled';
@@ -52,7 +52,7 @@ export function ImageGrid({
       groups.get(key)!.push(img);
     }
     return Array.from(groups.entries());
-  })();
+  }, [sorted]);
 
   return (
     <main className="flex-1 flex flex-col bg-editorial-800 relative">
@@ -145,7 +145,8 @@ export function ImageGrid({
                 return (
                   <div key={subj} className="cursor-pointer" onClick={() => { selectMode ? handleToggle() : setLightboxSubject?.(subj); }}>
                     <ImageCard
-                      image={{ ...latest, subject: `${subj}  (${imgs.length})` }}
+                      image={latest}
+                      overriddenSubject={`${subj}  (${imgs.length})`}
                       categoryName={categories.find(c => c.id === latest.categoryId)?.name}
                       onDelete={onDelete}
                       onGeneratePost={onGeneratePost}

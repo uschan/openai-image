@@ -6,8 +6,8 @@ import {
 import type { GeneratedImage } from '../types';
 
 export interface ImageCardProps {
-  key?: string | number;
   image: GeneratedImage;
+  overriddenSubject?: string;
   categoryName?: string;
   onDelete: (id: string) => void;
   onGeneratePost: (id: string, prompt: string) => void;
@@ -17,7 +17,7 @@ export interface ImageCardProps {
   onToggleFlag?: () => void;
 }
 
-export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
+export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
 
   const handleCopyPrompt = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,7 +87,7 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
             <span className="label-caps !text-white/40">Synthesizing...</span>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(image.id); }}
-              className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all mt-2"
+              className="px-3 py-1 bg-white/5 hover:bg-red-500/20 text-white/30 hover:text-red-400 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all mt-2"
             >
               Cancel
             </button>
@@ -146,7 +146,7 @@ export function _ImageCard({ image, categoryName, onDelete, onGeneratePost, sele
             title={image.subject + ' — click to copy'}
             onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(image.subject || ''); }}
           >
-            {image.subject || "Untitled Synthesis"}
+            {overriddenSubject || image.subject || "Untitled Synthesis"}
           </h4>
           <span className="text-[10px] font-mono text-white/20 whitespace-nowrap">
             {new Date(image.timestamp).toLocaleDateString([], { month: '2-digit', day: '2-digit' })}

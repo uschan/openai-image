@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ChevronLeft, ChevronRight, FolderOpen, Plus, Layers, Flower2, Utensils, BookOpen, Leaf, Shell, Palette, Bug, Dog, Fish, Camera, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FolderOpen, Plus, Layers, Flower2, Utensils, BookOpen, Leaf, Palette, Camera, Star } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableCategory } from './SortableCategory';
 import type { Category } from '../types';
@@ -96,13 +96,9 @@ export function LeftSidebar({
         </section>
 
         {isSidebarOpen && (
-          <section className="mt-auto">
-            <div className="flex items-center justify-between text-[9px] font-bold text-white/30 mb-3 uppercase tracking-widest">
-              <span>GPU Performance</span>
-              <span className="text-accent">92% Optimal</span>
-            </div>
-            <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
-              <motion.div initial={{ width: 0 }} animate={{ width: '92%' }} className="h-full bg-accent" />
+          <section className="mt-auto pt-4 border-t border-white/5">
+            <div className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
+              Images · {categories.reduce((s, c) => s + (c.count || 0), 0)}
             </div>
           </section>
         )}

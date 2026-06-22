@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Layers, Image as ImageIcon, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Layers, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
@@ -53,7 +53,7 @@ export default function App() {
   const [groupBySubject, setGroupBySubject] = useState(true);
   const [lightboxSubject, setLightboxSubject] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [sessionStart] = useState(Date.now());
+  const sessionStart = Date.now();
   const [sessionTime, setSessionTime] = useState("00:00:00");
 
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function App() {
 
   const handleAddCategory = () => {
     if (!newCategoryName) return;
-    setCategories(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: newCategoryName, count: 0, icon: newCategoryIcon }]);
+    setCategories(prev => [...prev, { id: Math.random().toString(36).slice(2, 11), name: newCategoryName, count: 0, icon: newCategoryIcon }]);
     setNewCategoryName(""); setNewCategoryIcon("Layers"); setIsAddingCategory(false);
   };
 
@@ -176,7 +176,7 @@ export default function App() {
 
   const handleSaveTemplate = (tpl: Partial<Template>) => {
     if (tpl.id) setTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, ...tpl } as Template : t));
-    else setTemplates(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: tpl.name || "Untitled", content: tpl.content || "", isPinned: tpl.isPinned !== false }]);
+    else setTemplates(prev => [...prev, { id: Math.random().toString(36).slice(2, 11), name: tpl.name || "Untitled", content: tpl.content || "", isPinned: tpl.isPinned !== false }]);
     setIsAddingTemplate(false); setEditingTemplate(null);
   };
 
@@ -224,7 +224,7 @@ export default function App() {
     setGenerationStats(prev => ({ ...prev, totalAttempts: prev.totalAttempts + 1 }));
     try {
       // Create pending card immediately for visual feedback
-      const internalId = Math.random().toString(36).substr(2, 9);
+      const internalId = Math.random().toString(36).slice(2, 11);
       if (activeModel === "APIKEYFUN") {
         setImages(prev => [{ id: internalId, url: "", subject, prompt: finalPrompt, timestamp: Date.now(), status: 'pending', isSaved: false, categoryId: 'uncategorized', metadata: { model: activeModel, ratio: aspectRatio, resolution } } as GeneratedImage, ...prev]);
       }
@@ -242,7 +242,7 @@ export default function App() {
 
       if (!gr.ok || !gd.data?.[0]?.task_id) throw new Error(gd.error || "Generation failed");
       const taskId = gd.data[0].task_id;
-      const imgId = Math.random().toString(36).substr(2, 9);
+      const imgId = Math.random().toString(36).slice(2, 11);
       setImages(prev => [{ id: imgId, url: "", subject, prompt: finalPrompt, timestamp: Date.now(), status: 'pending', isSaved: false, categoryId: 'uncategorized', metadata: { model: activeModel, ratio: aspectRatio, resolution } } as GeneratedImage, ...prev]);
 
       const poll = async (): Promise<boolean> => {
@@ -271,7 +271,18 @@ export default function App() {
       };
 
       let done = false;
-      while (!done) { await new Promise(r => setTimeout(r, 3000)); done = await poll(); }
+      let pollCount = 0;
+      const MAX_POLLS = 60;
+      while (!done && pollCount < MAX_POLLS) {
+        await new Promise(r => setTimeout(r, 3000));
+        done = await poll();
+        pollCount++;
+      }
+      if (!done) {
+        setImages(prev => prev.map(img => img.id === imgId ? { ...img, status: 'failed' } : img));
+        setIsGenerating(false);
+        setGenerationStats(prev => ({ ...prev, failed: prev.failed + 1 }));
+      }
     } catch (e: any) { showError(e.message); setIsGenerating(false); setGenerationStats(prev => ({ ...prev, failed: prev.failed + 1 })); }
   };
 

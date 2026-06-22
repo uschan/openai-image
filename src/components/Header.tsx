@@ -1,4 +1,4 @@
-import { Sun, Moon, Cloud, Download, Zap } from 'lucide-react';
+import { Sun, Moon, Cloud, Download } from 'lucide-react';
 
 interface HeaderProps {
   apiHealth: { gemini: boolean; apimart: boolean; deepseek: boolean };

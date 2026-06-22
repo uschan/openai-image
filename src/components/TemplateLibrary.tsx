@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'motion/react';
 import { Plus, Trash2 } from 'lucide-react';
 import type { Template } from '../types';
