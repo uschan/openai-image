@@ -252,6 +252,7 @@ async function startServer() {
     }
 
     try {
+      console.log("[apimart] sending size:", actualSize, "resolution:", resolution);
       const response = await axios.post(`${baseUrl}/v1/images/generations`, {
         model: apiModel,
         prompt: prompt,
