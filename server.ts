@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs/promises";
 import { fileURLToPath } from "url";
 import axios from "axios";
+import https from "https";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_FILE = path.join(__dirname, "templates.json");
@@ -59,21 +60,29 @@ async function startServer() {
     }
   });
 
+  const safeWrite = async (file: string, data: any, minItems?: number) => {
+    const json = JSON.stringify(data, null, 2);
+    if (minItems !== undefined && Array.isArray(data) && data.length < minItems) {
+      let existingCount = 0;
+      try { existingCount = JSON.parse(await fs.readFile(file, "utf-8")).length; } catch {}
+      if (existingCount > minItems && data.length < minItems) {
+        console.error(`[SAFETY] Refusing to shrink ${path.basename(file)} from ${existingCount} to ${data.length} items`);
+        return;
+      }
+    }
+    try { await fs.copyFile(file, file + ".bak"); } catch {}
+    const tmp = file + ".tmp";
+    await fs.writeFile(tmp, json, "utf-8");
+    await fs.rename(tmp, file);
+  };
+
   app.post("/api/save", async (req, res) => {
     try {
       const { templates, images, categories, stats } = req.body;
-      if (templates) {
-        await fs.writeFile(TEMPLATES_FILE, JSON.stringify(templates, null, 2), "utf-8");
-      }
-      if (images) {
-        await fs.writeFile(IMAGES_FILE, JSON.stringify(images, null, 2), "utf-8");
-      }
-      if (categories) {
-        await fs.writeFile(CATEGORIES_FILE, JSON.stringify(categories, null, 2), "utf-8");
-      }
-      if (stats) {
-        await fs.writeFile(STATS_FILE, JSON.stringify(stats, null, 2), "utf-8");
-      }
+      if (templates) await safeWrite(TEMPLATES_FILE, templates);
+      if (images) await safeWrite(IMAGES_FILE, images, 100);
+      if (categories) await safeWrite(CATEGORIES_FILE, categories, 2);
+      if (stats) await safeWrite(STATS_FILE, stats);
       res.json({ success: true });
     } catch (error) {
       console.error("Error saving data:", error);
@@ -83,24 +92,44 @@ async function startServer() {
 
   app.post("/api/save-image", async (req, res) => {
     const { id, url, subject } = req.body;
-    try {
-      const fetchRes = await fetch(url, {
-        headers: {
-          "Authorization": `Bearer ${process.env.APIMART_API_KEY}`,
-          "Accept": "*/*",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+
+    const downloadImage = async (retries = 3): Promise<Buffer> => {
+      for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+          const fetchRes = await axios.get(url, {
+            responseType: "arraybuffer",
+            headers: {
+              "Authorization": `Bearer ${process.env.APIMART_API_KEY}`,
+              "Accept": "*/*",
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+            },
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+            timeout: 15000,
+          });
+          if (fetchRes.status < 200 || fetchRes.status >= 300) {
+            throw new Error(`HTTP ${fetchRes.status}`);
+          }
+          return fetchRes.data;
+        } catch (e: any) {
+          const msg = e.code || e.message;
+          console.log(`[save-image] attempt ${attempt + 1}/${retries} failed for ${id}: ${msg}`);
+          if (attempt === retries - 1) throw e;
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
         }
-      });
-      if (!fetchRes.ok) throw new Error(`Failed to fetch image: ${fetchRes.status}`);
-      
+      }
+      throw new Error("unreachable");
+    };
+
+    try {
+      const data = await downloadImage();
+
       const slug = (subject || "untitled").replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
       const filename = `${slug}_${Date.now()}_${id}.png`;
       const filepath = path.join(DOWNLOADS_DIR, filename);
-      
-      const buffer = await fetchRes.arrayBuffer();
-      await fs.writeFile(filepath, Buffer.from(buffer));
-      
+
+      await fs.writeFile(filepath, data);
+
       res.json({ localUrl: `/downloads/${filename}` });
     } catch(e) {
       console.error("save-image error", e);
