@@ -43,6 +43,7 @@ export default function App() {
   const [enhanceLoading, setEnhanceLoading] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [activeTab, setActiveTab] = useState<'workspace' | 'assets' | 'models' | 'history'>('workspace');
+  const [loaded, setLoaded] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [apiHealth, setApiHealth] = useState({ gemini: false, apimart: false, deepseek: false });
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,9 +93,18 @@ export default function App() {
     (async () => {
       try {
         const r = await fetch("/api/data"); const d = await r.json();
+        if (d.categories) {
+          let cats = [...d.categories];
+          if (!cats.some(c => c.id === 'all')) cats.unshift({ id: 'all', name: 'All Work', count: 0 });
+          if (!cats.some(c => c.id === 'uncategorized')) cats.splice(1, 0, { id: 'uncategorized', name: 'Uncategorized', count: 0 });
+          setCategories(cats.map(c => c.id === 'uncategorized' && c.name === '未归类' ? { ...c, name: 'Uncategorized' } : c));
+        }
+        if (d.templates) { setTemplates(d.templates); if (d.templates.length > 0 && !promptTemplate) setPromptTemplate(d.templates[0].content); }
+        if (d.stats) setGenerationStats(d.stats);
+        setLoaded(true);
+
         if (d.images) {
           const loaded = d.images.map((img: any) => {
-            // Auto-fail pending images older than 10 minutes
             if (img.status === 'pending' && img.timestamp && Date.now() - img.timestamp > 600000) {
               return { ...img, status: 'failed', postContent: undefined, isGeneratingPost: false };
             }
@@ -111,25 +121,18 @@ export default function App() {
             }
           }
         }
-        if (d.categories) {
-          let cats = [...d.categories];
-          if (!cats.some(c => c.id === 'all')) cats.unshift({ id: 'all', name: 'All Work', count: 0 });
-          if (!cats.some(c => c.id === 'uncategorized')) cats.splice(1, 0, { id: 'uncategorized', name: 'Uncategorized', count: 0 });
-          setCategories(cats.map(c => c.id === 'uncategorized' && c.name === '未归类' ? { ...c, name: 'Uncategorized' } : c));
-        }
-        if (d.templates) { setTemplates(d.templates); if (d.templates.length > 0 && !promptTemplate) setPromptTemplate(d.templates[0].content); }
-        if (d.stats) setGenerationStats(d.stats);
       } catch {}
     })();
   }, []);
 
   useEffect(() => { // sync to server
+    if (!loaded) return;
     const t = setTimeout(async () => {
       const imgs = images.map(({ postContent, isGeneratingPost, ...img }) => img);
       await fetch("/api/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ images: imgs, categories, templates, stats: generationStats }) });
     }, 3000);
     return () => clearTimeout(t);
-  }, [images, categories, templates, generationStats]);
+  }, [images, categories, templates, generationStats, loaded]);
 
   useEffect(() => { // keyboard shortcuts
     const h = (e: KeyboardEvent) => {

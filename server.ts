@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs/promises";
 import { fileURLToPath } from "url";
 import axios from "axios";
+import https from "https";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_FILE = path.join(__dirname, "templates.json");
@@ -59,21 +60,29 @@ async function startServer() {
     }
   });
 
+  const safeWrite = async (file: string, data: any, minItems?: number) => {
+    const json = JSON.stringify(data, null, 2);
+    if (minItems !== undefined && Array.isArray(data) && data.length < minItems) {
+      let existingCount = 0;
+      try { existingCount = JSON.parse(await fs.readFile(file, "utf-8")).length; } catch {}
+      if (existingCount > minItems && data.length < minItems) {
+        console.error(`[SAFETY] Refusing to shrink ${path.basename(file)} from ${existingCount} to ${data.length} items`);
+        return;
+      }
+    }
+    try { await fs.copyFile(file, file + ".bak"); } catch {}
+    const tmp = file + ".tmp";
+    await fs.writeFile(tmp, json, "utf-8");
+    await fs.rename(tmp, file);
+  };
+
   app.post("/api/save", async (req, res) => {
     try {
       const { templates, images, categories, stats } = req.body;
-      if (templates) {
-        await fs.writeFile(TEMPLATES_FILE, JSON.stringify(templates, null, 2), "utf-8");
-      }
-      if (images) {
-        await fs.writeFile(IMAGES_FILE, JSON.stringify(images, null, 2), "utf-8");
-      }
-      if (categories) {
-        await fs.writeFile(CATEGORIES_FILE, JSON.stringify(categories, null, 2), "utf-8");
-      }
-      if (stats) {
-        await fs.writeFile(STATS_FILE, JSON.stringify(stats, null, 2), "utf-8");
-      }
+      if (templates) await safeWrite(TEMPLATES_FILE, templates);
+      if (images) await safeWrite(IMAGES_FILE, images, 100);
+      if (categories) await safeWrite(CATEGORIES_FILE, categories, 2);
+      if (stats) await safeWrite(STATS_FILE, stats);
       res.json({ success: true });
     } catch (error) {
       console.error("Error saving data:", error);
@@ -83,24 +92,44 @@ async function startServer() {
 
   app.post("/api/save-image", async (req, res) => {
     const { id, url, subject } = req.body;
-    try {
-      const fetchRes = await fetch(url, {
-        headers: {
-          "Authorization": `Bearer ${process.env.APIMART_API_KEY}`,
-          "Accept": "*/*",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+
+    const downloadImage = async (retries = 3): Promise<Buffer> => {
+      for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+          const fetchRes = await axios.get(url, {
+            responseType: "arraybuffer",
+            headers: {
+              "Authorization": `Bearer ${process.env.APIMART_API_KEY}`,
+              "Accept": "*/*",
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+            },
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+            timeout: 15000,
+          });
+          if (fetchRes.status < 200 || fetchRes.status >= 300) {
+            throw new Error(`HTTP ${fetchRes.status}`);
+          }
+          return fetchRes.data;
+        } catch (e: any) {
+          const msg = e.code || e.message;
+          console.log(`[save-image] attempt ${attempt + 1}/${retries} failed for ${id}: ${msg}`);
+          if (attempt === retries - 1) throw e;
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
         }
-      });
-      if (!fetchRes.ok) throw new Error(`Failed to fetch image: ${fetchRes.status}`);
-      
+      }
+      throw new Error("unreachable");
+    };
+
+    try {
+      const data = await downloadImage();
+
       const slug = (subject || "untitled").replace(/[^a-zA-Z0-9_\-]/g, '_').toLowerCase();
       const filename = `${slug}_${Date.now()}_${id}.png`;
       const filepath = path.join(DOWNLOADS_DIR, filename);
-      
-      const buffer = await fetchRes.arrayBuffer();
-      await fs.writeFile(filepath, Buffer.from(buffer));
-      
+
+      await fs.writeFile(filepath, data);
+
       res.json({ localUrl: `/downloads/${filename}` });
     } catch(e) {
       console.error("save-image error", e);
@@ -195,68 +224,64 @@ async function startServer() {
 
     // apikey.fun uses SSE streaming — handle synchronously
     if (model === "APIKEYFUN") {
-      try {
-        // Try SSE first
-        const sseRes = await fetch(`${baseUrl}/v1/images/generations`, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json", "Accept": "text/event-stream" },
-          body: JSON.stringify({ model: apiModel, prompt, n: 1, size, stream: true, response_format: "b64_json" }),
-        });
+      const apiRes = await fetch(`${baseUrl}/v1/images/generations`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "Accept": "text/event-stream",
+        },
+          body: JSON.stringify({
+            model: apiModel,
+            prompt,
+            n: 1,
+            size,
+            stream: true,
+            response_format: "b64_json",
+          }),
+      });
 
-        let b64 = "";
-
-        if (sseRes.ok && (sseRes.headers.get("content-type") || "").includes("text/event-stream")) {
-          const reader = sseRes.body!.getReader();
-          const decoder = new TextDecoder();
-          let buffer = "";
-          loop: while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const frames = buffer.split(/\r?\n\r?\n/);
-            buffer = frames.pop() || "";
-            for (const frame of frames) {
-              const data = frame.split(/\r?\n/).filter(l => l.startsWith("data:")).map(l => l.slice(5).trim()).join("\n");
-              if (!data || data === "[DONE]") continue;
-              let event: any;
-              try { event = JSON.parse(data); } catch { continue; }
-              if (event.type === "image_generation.completed") {
-                b64 = event.b64_json || event.data?.[0]?.b64_json || "";
-                break loop;
-              }
-            }
-          }
-        }
-
-        // Fallback: try non-streaming if SSE didn't return image
-        if (!b64) {
-          const fallbackRes = await fetch(`${baseUrl}/v1/images/generations`, {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: apiModel, prompt, n: 1, size }),
-          });
-          if (!fallbackRes.ok) {
-            return res.status(fallbackRes.status).json({ error: await fallbackRes.text() });
-          }
-          const json = await fallbackRes.json();
-          b64 = json?.data?.[0]?.b64_json || "";
-        }
-
-        if (!b64) {
-          return res.status(500).json({ error: "No image data received" });
-        }
-
-        const slug = prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        const filename = `${Date.now()}_${slug}.png`;
-        await fs.writeFile(path.join(DOWNLOADS_DIR, filename), Buffer.from(b64, "base64"));
-        return res.json({ provider: "apikeyfun", localUrl: `/downloads/${filename}`, prompt, subject: prompt.slice(0, 40) });
-      } catch (e: any) {
-        console.error("apikeyfun error:", e);
-        return res.status(500).json({ error: e.message || "Generation failed" });
+      if (!apiRes.ok) {
+        return res.status(apiRes.status).json({ error: await apiRes.text() });
       }
+
+      const reader = apiRes.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split(/\r?\n\r?\n/);
+        buffer = frames.pop() || "";
+
+        for (const frame of frames) {
+          const data = frame.split(/\r?\n/)
+            .filter(line => line.startsWith("data:"))
+            .map(line => line.slice(5).trim())
+            .join("\n");
+
+          if (!data || data === "[DONE]") continue;
+
+          let event: any;
+          try { event = JSON.parse(data); } catch { continue; }
+          if (event.type === "image_generation.completed") {
+            const b64 = event.b64_json || event.data?.[0]?.b64_json;
+            const slug = prompt.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            const filename = `${Date.now()}_${slug}.png`;
+            const filepath = path.join(DOWNLOADS_DIR, filename);
+            await fs.writeFile(filepath, Buffer.from(b64, "base64"));
+            return res.json({ provider: "apikeyfun", localUrl: `/downloads/${filename}`, prompt, subject: prompt.slice(0, 40) });
+          }
+        }
+      }
+
+      return res.status(500).json({ error: "Stream ended without completed event" });
     }
 
     try {
+      console.log("[apimart] sending size:", actualSize, "resolution:", resolution);
       const response = await axios.post(`${baseUrl}/v1/images/generations`, {
         model: apiModel,
         prompt: prompt,
