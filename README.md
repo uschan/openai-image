@@ -36,7 +36,10 @@ A self-hosted AI image generation workbench with prompt template management, dra
 - **Copy to clipboard**: per-section copy buttons
 
 ### Data & Export
-- **JSON persistence**: `images.json`, `templates.json`, `categories.json`, `stats.json`
+- **SQLite persistence**: incremental image, subject, category, template, and statistics storage in `atlas.db`
+- **Safe legacy import**: the original four JSON files remain untouched and are backed up before first import
+- **Paginated library**: server-side category filtering, search, subject grouping, and cursor pagination
+- **Thumbnail cache**: lazy 480px WebP previews keep the grid responsive without modifying original images
 - **Export**: one-click download of templates + categories as JSON
 - **Session timer**: live session duration in footer
 - **API health indicators**: real-time status dots for Gemini / APIMart / DeepSeek
@@ -83,6 +86,7 @@ APIMART_API_KEY=    # required, for image generation
 
 ```
 ├── server.ts             # Express backend (API proxy + file storage)
+├── server/database.ts    # SQLite schema, migration, queries, and file-operation journal
 ├── src/
 │   ├── App.tsx           # state + handlers + DnD orchestration
 │   ├── components/
@@ -98,8 +102,10 @@ APIMART_API_KEY=    # required, for image generation
 │   ├── types.ts          # TypeScript interfaces
 │   └── index.css         # Tailwind + custom theme
 ├── clean_metadata.py     # standalone metadata stripper
-├── downloads/            # saved images (gitignored)
-└── *.json                # runtime data files (gitignored)
+├── downloads/            # originals and editable subject folders (gitignored)
+├── cache/thumbnails/     # disposable WebP preview cache
+├── atlas.db              # primary business database (gitignored)
+└── *.json                # preserved legacy import files (gitignored)
 ```
 
 ## Keyboard Shortcuts
@@ -146,8 +152,10 @@ pm2 startup
 ### Notes
 
 - `.env` keys are read server-side only — never exposed to the browser
-- `downloads/` grows over time; mount a volume or symlink to external storage if needed
-- `images.json` can reach hundreds of MB; backup regularly
+- `downloads/` remains the human-facing workspace; subject moves are journaled and recoverable
+- Run `npm run db:check` to verify SQLite integrity, foreign keys, missing media, and interrupted file moves
+- Run `npm run backup:data` to create a consistent SQLite snapshot plus the preserved legacy JSON files
+- The first SQLite startup creates a verified `backups/auto-pre-sqlite-*` snapshot before importing JSON
 - `clean_metadata.py` requires `pip install Pillow watchdog`
 
 ## Architecture Notes

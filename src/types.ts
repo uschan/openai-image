@@ -27,6 +27,8 @@ export interface GeneratedImage {
     body: string;
     tags: string[];
   };
+  subjectCount?: number;
+  thumbnailUrl?: string;
 }
 
 export interface Category {
@@ -34,4 +36,6 @@ export interface Category {
   name: string;
   count: number;
   icon?: string;
+  folderName?: string;
+  storageKey?: string;
 }

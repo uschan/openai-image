@@ -22,6 +22,11 @@ interface ImageGridProps {
   groupBySubject: boolean;
   setGroupBySubject: (v: boolean) => void;
   setLightboxSubject: (v: string | null) => void;
+  total: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  onLoadMore: () => void;
+  onDataChanged: () => void;
 }
 
 export function ImageGrid({
@@ -29,30 +34,12 @@ export function ImageGrid({
   setSearchQuery, selectMode, setSelectMode, selectedIds, setSelectedIds,
   onDelete, onGeneratePost, onBatchMove, onToggleFlag,
   groupBySubject, setGroupBySubject, setLightboxSubject,
+  total, hasMore, isLoading, onLoadMore, onDataChanged,
 }: ImageGridProps) {
 
   const sorted = useMemo(() => {
-    const filtered = images
-      .filter(img => {
-        if (selectedCategory === 'all' || img.categoryId === selectedCategory || (!img.categoryId && selectedCategory === 'uncategorized')) {
-          if (!searchQuery) return true;
-          const q = searchQuery.toLowerCase();
-          return (img.subject || '').toLowerCase().includes(q) || (img.prompt || '').toLowerCase().includes(q);
-        }
-        return false;
-      });
-    return [...filtered].sort((a, b) => b.timestamp - a.timestamp);
-  }, [images, selectedCategory, searchQuery]);
-
-  const subjectGroups = useMemo(() => {
-    const groups = new Map<string, GeneratedImage[]>();
-    for (const img of sorted) {
-      const key = img.subject || 'Untitled';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(img);
-    }
-    return Array.from(groups.entries());
-  }, [sorted]);
+    return [...images].sort((a, b) => b.timestamp - a.timestamp);
+  }, [images]);
 
   return (
     <main className="flex-1 flex flex-col bg-editorial-800 relative">
@@ -101,7 +88,7 @@ export function ImageGrid({
                         try {
                           const res = await fetch("/api/move-image", {
                             method: "POST", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ localUrl: img.localUrl, categoryId: catId }),
+                            body: JSON.stringify({ imageId: img.id, localUrl: img.localUrl, categoryId: catId }),
                           });
                           const data = await res.json();
                           if (data.localUrl) {
@@ -113,6 +100,7 @@ export function ImageGrid({
                       }
                     }
                     setSelectedIds(new Set());
+                    onDataChanged();
                   }}
                   className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-white"
                 >
@@ -129,30 +117,29 @@ export function ImageGrid({
           {/* Grid */}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
             {groupBySubject ? (
-              subjectGroups.map(([subj, imgs]) => {
-                const latest = imgs[0];
-                const allIds = imgs.map(i => i.id);
-                const allSelected = allIds.every(id => selectedIds.has(id));
-                const someSelected = allIds.some(id => selectedIds.has(id));
+              sorted.map((latest) => {
+                const subj = latest.subject || 'Untitled';
+                const allSelected = selectedIds.has(latest.id);
                 const handleToggle = () => {
                   setSelectedIds(prev => {
                     const next = new Set(prev);
-                    if (allSelected) { allIds.forEach(id => next.delete(id)); }
-                    else { allIds.forEach(id => next.add(id)); }
+                    if (allSelected) next.delete(latest.id);
+                    else next.add(latest.id);
                     return next;
                   });
                 };
                 return (
-                  <div key={subj} className="cursor-pointer" onClick={() => { selectMode ? handleToggle() : setLightboxSubject?.(subj); }}>
+                  <div key={latest.id} className="cursor-pointer">
                     <ImageCard
                       image={latest}
-                      overriddenSubject={`${subj}  (${imgs.length})`}
+                      overriddenSubject={`${subj}  (${latest.subjectCount || 1})`}
                       categoryName={categories.find(c => c.id === latest.categoryId)?.name}
                       onDelete={onDelete}
                       onGeneratePost={onGeneratePost}
-                      onToggleFlag={onToggleFlag}
+                      onToggleFlag={() => onToggleFlag(latest.id)}
+                      onOpen={() => setLightboxSubject?.(subj)}
                       selectMode={selectMode}
-                      isSelected={someSelected}
+                      isSelected={allSelected}
                       onToggleSelect={handleToggle}
                     />
                   </div>
@@ -177,13 +164,25 @@ export function ImageGrid({
             )}
           </div>
 
-          {sorted.length === 0 && images.length > 0 && (
+          {(hasMore || isLoading) && (
+            <div className="flex justify-center py-6">
+              <button
+                onClick={onLoadMore}
+                disabled={isLoading || !hasMore}
+                className="px-5 py-2 border border-white/10 rounded-lg text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white hover:border-white/30 disabled:opacity-30"
+              >
+                {isLoading ? 'Loading...' : `Load More (${images.length}/${total})`}
+              </button>
+            </div>
+          )}
+
+          {sorted.length === 0 && total > 0 && !isLoading && (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
               <h2 className="text-3xl font-light serif-italic italic tracking-tight text-white/20">No matches found.</h2>
             </div>
           )}
 
-          {images.length === 0 && (
+          {total === 0 && !isLoading && (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
               <h2 className="text-5xl font-light serif-italic italic tracking-tight text-white/20">No images yet.</h2>
               <p className="mt-4 label-caps tracking-[0.4em]">Generate your first subject</p>

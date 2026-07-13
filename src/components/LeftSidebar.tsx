@@ -1,9 +1,9 @@
-import React from 'react';
 import { motion } from 'motion/react';
-import { ChevronLeft, ChevronRight, FolderOpen, Plus, Layers, Flower2, Utensils, BookOpen, Leaf, Palette, Camera, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FolderOpen, Plus } from 'lucide-react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableCategory } from './SortableCategory';
 import type { Category } from '../types';
+import { CATEGORY_ICON_OPTIONS } from '../category-icons';
 
 interface LeftSidebarProps {
   categories: Category[];
@@ -13,30 +13,23 @@ interface LeftSidebarProps {
   setIsAddingCategory: (v: boolean) => void;
   newCategoryName: string;
   setNewCategoryName: (v: string) => void;
+  newCategoryStorageKey: string;
+  setNewCategoryStorageKey: (v: string) => void;
   selectedCategory: string;
   setSelectedCategory: (id: string) => void;
   handleAddCategory: () => void;
   newCategoryIcon: string;
   setNewCategoryIcon: (v: string) => void;
   onNativeImageDrop?: (imageId: string, categoryId: string) => void;
+  onEditCategory?: (category: Category) => void;
 }
 
 export function LeftSidebar({
   categories, isSidebarOpen, setIsSidebarOpen, isAddingCategory, setIsAddingCategory,
-  newCategoryName, setNewCategoryName, newCategoryIcon, setNewCategoryIcon,
+  newCategoryName, setNewCategoryName, newCategoryStorageKey, setNewCategoryStorageKey, newCategoryIcon, setNewCategoryIcon,
   selectedCategory, setSelectedCategory, handleAddCategory, onNativeImageDrop,
+  onEditCategory,
 }: LeftSidebarProps) {
-  const CAT_ICONS: Record<string, React.ReactNode> = {
-    Layers: <Layers className="w-3 h-3" />,
-    Flower2: <Flower2 className="w-3 h-3" />,
-    Utensils: <Utensils className="w-3 h-3" />,
-    BookOpen: <BookOpen className="w-3 h-3" />,
-    Leaf: <Leaf className="w-3 h-3" />,
-    Palette: <Palette className="w-3 h-3" />,
-    Camera: <Camera className="w-3 h-3" />,
-    Star: <Star className="w-3 h-3" />,
-  };
-
   return (
     <motion.aside
       initial={false}
@@ -68,12 +61,19 @@ export function LeftSidebar({
                 placeholder="New Category..."
                 className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white focus:border-accent/40 focus:ring-0"
               />
-              <div className="flex gap-1 flex-wrap">
-                {Object.entries(CAT_ICONS).map(([name, icon]) => (
+              <input
+                value={newCategoryStorageKey}
+                onChange={(e) => setNewCategoryStorageKey(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                placeholder="ASCII storage key (optional)"
+                className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] font-mono text-white focus:border-accent/40 focus:ring-0"
+              />
+              <div className="grid grid-cols-7 gap-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                {CATEGORY_ICON_OPTIONS.map(({ name, Icon }) => (
                   <button key={name} onClick={() => setNewCategoryIcon(name)}
-                    className={`p-1.5 rounded transition-colors ${newCategoryIcon === name ? 'bg-accent/20 text-accent' : 'text-white/30 hover:text-white/60'}`}
+                    className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${newCategoryIcon === name ? 'bg-accent/20 text-accent' : 'text-white/30 hover:text-white/60'}`}
                     title={name}>
-                    {icon}
+                    <Icon className="w-3 h-3" />
                   </button>
                 ))}
               </div>
@@ -89,6 +89,7 @@ export function LeftSidebar({
                   isSelected={selectedCategory === cat.id}
                   isSidebarOpen={isSidebarOpen}
                   onSelect={setSelectedCategory} onNativeImageDrop={onNativeImageDrop}
+                  onEdit={onEditCategory}
                 />
               ))}
             </SortableContext>
@@ -98,7 +99,7 @@ export function LeftSidebar({
         {isSidebarOpen && (
           <section className="mt-auto pt-4 border-t border-white/5">
             <div className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
-              Images · {categories.reduce((s, c) => s + (c.count || 0), 0)}
+              Images · {categories.find(c => c.id === 'all')?.count || 0}
             </div>
           </section>
         )}

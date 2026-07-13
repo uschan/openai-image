@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import {
-  Loader2, Trash2, FolderOpen, Copy, Sparkles, RefreshCw, ExternalLink, Flag, CheckCircle2
+  Loader2, Trash2, FolderOpen, Copy, Sparkles, RefreshCw, ExternalLink, Flag, CheckCircle2, ImageOff
 } from 'lucide-react';
 import type { GeneratedImage } from '../types';
 
@@ -15,9 +15,11 @@ export interface ImageCardProps {
   isSelected?: boolean;
   onToggleSelect?: () => void;
   onToggleFlag?: () => void;
+  onOpen?: () => void;
 }
 
-export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag }: ImageCardProps) {
+export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, onGeneratePost, selectMode, isSelected, onToggleSelect, onToggleFlag, onOpen }: ImageCardProps) {
+  const imageSource = image.thumbnailUrl || image.localUrl || image.url || null;
 
   const handleCopyPrompt = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,26 +34,29 @@ export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, o
     }
   };
 
-  const handleDragStart = (e: React.DragEvent) => {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (image.status !== 'completed' || selectMode) { e.preventDefault(); return; }
     e.dataTransfer.setData('text/plain', image.id);
     e.currentTarget.style.opacity = '0.5';
   };
-  const handleDragEnd = (e: React.DragEvent) => {
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.style.opacity = '1';
   };
 
   return (
     <motion.div
       draggable={image.status === 'completed' && !selectMode}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onDragStartCapture={handleDragStart}
+      onDragEndCapture={handleDragEnd}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.25 }}
       className={`group relative flex flex-col gap-4 ${selectMode ? 'cursor-pointer' : ''}`}
-      onClick={() => { if (selectMode && onToggleSelect) onToggleSelect(); }}
+      onClick={() => {
+        if (selectMode && onToggleSelect) onToggleSelect();
+        else if (onOpen) onOpen();
+      }}
     >
       {/* Flag indicator */}
       {image.flagged && (
@@ -69,7 +74,7 @@ export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, o
 
       {/* Image Container with Drag Handle */}
       <div className={`relative aspect-[3/4] rounded-2xl overflow-hidden glass border transition-all duration-700 group-hover:border-accent/40 shadow-2xl ${image.flagged ? 'border-amber-500/50 !border-amber-500/50' : 'border-white/10'}`}>
-        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {imageSource && <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
                 onClick={handleOpenImage}
                 className="p-2 bg-black/40 hover:bg-black/80 backdrop-blur-md text-white rounded-lg transition-all"
@@ -77,7 +82,7 @@ export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, o
             >
                 <ExternalLink className="w-4 h-4" />
             </button>
-        </div>
+        </div>}
 
         <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none" />
 
@@ -94,21 +99,32 @@ export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, o
           </div>
         ) : (
           <>
-            <img 
-              src={image.localUrl || image.url} 
-              alt={image.prompt}
-              loading="lazy"
-              draggable="false"
-              onError={(e) => {
-                const img = e.currentTarget;
-                if (img.src === image.localUrl && image.url) {
-                  img.src = image.url;
-                }
-              }}
+            {imageSource ? (
+              <img
+                src={imageSource}
+                alt=""
+                loading="lazy"
+                draggable="false"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.dataset.fallback !== 'original' && image.localUrl) {
+                    img.dataset.fallback = 'original';
+                    img.src = image.localUrl;
+                  } else if (img.dataset.fallback !== 'remote' && image.url) {
+                    img.dataset.fallback = 'remote';
+                    img.src = image.url;
+                  }
+                }}
 
-              onClick={handleOpenImage}
-              className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105 cursor-pointer"
-            />
+                onClick={handleOpenImage}
+                className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105 cursor-pointer"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/20 text-white/25">
+                <ImageOff className="w-7 h-7" />
+                <span className="label-caps !text-white/25">Generation failed</span>
+              </div>
+            )}
             
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-editorial-950 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
             
@@ -140,14 +156,27 @@ export function _ImageCard({ image, overriddenSubject, categoryName, onDelete, o
 
       {/* Info Panel Below Card */}
       <div className="px-1 space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 
-            className="text-sm font-black uppercase tracking-[0.1em] text-white/90 truncate mr-4 cursor-pointer hover:text-accent transition-colors" 
-            title={image.subject + ' — click to copy'}
-            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(image.subject || ''); }}
-          >
-            {overriddenSubject || image.subject || "Untitled Synthesis"}
-          </h4>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <h4
+              className="text-sm font-black uppercase tracking-[0.1em] text-white/90 truncate cursor-pointer hover:text-accent transition-colors"
+              title={`${image.subject} — click to copy`}
+              onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(image.subject || ''); }}
+            >
+              {overriddenSubject || image.subject || "Untitled Synthesis"}
+            </h4>
+            {onOpen && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpen(); }}
+                className="w-6 h-6 shrink-0 inline-flex items-center justify-center rounded-md text-white/20 hover:text-accent hover:bg-white/5 transition-colors"
+                title="Open Subject"
+                aria-label={`Open ${image.subject}`}
+              >
+                <FolderOpen className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <span className="text-[10px] font-mono text-white/20 whitespace-nowrap">
             {new Date(image.timestamp).toLocaleDateString([], { month: '2-digit', day: '2-digit' })}
           </span>

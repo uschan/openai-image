@@ -34,26 +34,22 @@ export function RightSidebar({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [urlInput, setUrlInput] = useState('');
 
-  const addImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    for (const f of files) {
-      if (referenceImages.length >= 16) break;
+  const appendFiles = (files: FileList | File[]) => {
+    for (const f of Array.from(files).filter(file => file.type.startsWith('image/'))) {
       const reader = new FileReader();
-      reader.onload = () => setReferenceImages(prev => [...prev, reader.result as string]);
+      reader.onload = () => setReferenceImages(prev => prev.length >= 16 ? prev : [...prev, reader.result as string]);
       reader.readAsDataURL(f);
     }
+  };
+
+  const addImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) appendFiles(e.target.files);
     e.target.value = '';
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    for (const f of e.dataTransfer.files) {
-      if (referenceImages.length >= 16) break;
-      const reader = new FileReader();
-      reader.onload = () => setReferenceImages(prev => [...prev, reader.result as string]);
-      reader.readAsDataURL(f);
-    }
+    appendFiles(e.dataTransfer.files);
   };
 
   return (
@@ -99,15 +95,15 @@ export function RightSidebar({
               placeholder="or paste image URL..."
               className="flex-1 bg-editorial-900/50 border border-white/5 rounded-lg px-2 py-1 text-[10px] text-white/60 focus:border-accent/20 focus:ring-0"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && urlInput.trim()) {
+                if (e.key === 'Enter' && urlInput.trim() && referenceImages.length < 16) {
                   setReferenceImages(prev => [...prev, urlInput.trim()]);
                   setUrlInput('');
                 }
               }}
             />
             <button
-              disabled={!urlInput.trim()}
-              onClick={() => { setReferenceImages(prev => [...prev, urlInput.trim()]); setUrlInput(''); }}
+              disabled={!urlInput.trim() || referenceImages.length >= 16}
+              onClick={() => { setReferenceImages(prev => prev.length >= 16 ? prev : [...prev, urlInput.trim()]); setUrlInput(''); }}
               className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] text-white/40 hover:text-white disabled:opacity-20"
             >
               <Link className="w-3 h-3" />
@@ -117,7 +113,7 @@ export function RightSidebar({
             <div className="flex gap-2 mt-3 flex-wrap">
               {referenceImages.map((img, i) => (
                 <div key={i} className="relative w-14 h-14 rounded-lg overflow-hidden border border-white/10 group">
-                  <img src={img} alt={`ref-${i}`} className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-cover" />
                   <button
                     onClick={() => setReferenceImages(prev => prev.filter((_, j) => j !== i))}
                     className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -170,10 +166,10 @@ export function RightSidebar({
         {/* Generate */}
         <button
           onClick={generateImage}
-          disabled={!subject}
+          disabled={!subject || isGenerating}
           className="w-full py-4 bg-accent text-editorial-950 rounded-xl font-black text-[11px] uppercase tracking-[0.3em] hover:scale-[0.98] active:scale-95 transition-all shadow-[0_0_40px_rgba(0,240,255,0.2)] disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <div className="flex items-center justify-center gap-3">Synthesize Output <Zap className="w-4 h-4 fill-editorial-950" /></div>
+          <div className="flex items-center justify-center gap-3">{isGenerating ? 'Synthesizing...' : 'Synthesize Output'} <Zap className="w-4 h-4 fill-editorial-950" /></div>
         </button>
 
         {/* Model */}

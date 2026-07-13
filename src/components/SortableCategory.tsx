@@ -1,19 +1,15 @@
-import React from 'react';
-import { Layers, GripVertical, Flower2, Utensils, BookOpen, Leaf, Shell, Palette, Bug, Dog, Fish, Camera, Star } from 'lucide-react';
+import { GripVertical, Pencil } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Category } from '../types';
-
-const ICON_MAP: Record<string, React.ReactNode> = {
-  Layers: <Layers />, Flower2: <Flower2 />, Utensils: <Utensils />,
-  BookOpen: <BookOpen />, Leaf: <Leaf />, Palette: <Palette />, Camera: <Camera />, Star: <Star />,
-};
+import { CategoryIcon } from '../category-icons';
 
 export interface SortableCategoryProps {
   category: Category;
   isSelected: boolean;
   isSidebarOpen: boolean;
   onSelect: (id: string) => void;
+  onEdit?: (category: Category) => void;
   onNativeImageDrop?: (imageId: string, categoryId: string) => void;
 }
 
@@ -22,9 +18,9 @@ export function SortableCategory({
   isSelected, 
   isSidebarOpen, 
   onSelect,
+  onEdit,
   onNativeImageDrop,
 }: SortableCategoryProps) {
-  const catIcon = ICON_MAP[category.icon || 'Layers'] || <Layers />;
   const {
     attributes,
     listeners,
@@ -73,13 +69,22 @@ export function SortableCategory({
           </div>
         )}
         <span className={`shrink-0 ${isSidebarOpen ? 'w-4 h-4' : 'w-5 h-5'} ${isSelected ? 'text-accent' : ''}`}>
-          {catIcon}
+          <CategoryIcon name={category.icon} className="w-full h-full" />
         </span>
         {isSidebarOpen && (
           <>
             <span className="flex-1 text-left text-[11px] font-bold uppercase tracking-wide truncate">
               {category.name}
             </span>
+            {category.id !== 'all' && onEdit && (
+              <button
+                onClick={(event) => { event.stopPropagation(); onEdit(category); }}
+                className="p-1 text-white/0 group-hover:text-white/35 hover:!text-accent transition-colors"
+                title="Edit category"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+            )}
             <span className="text-[10px] font-mono text-white/20">{category.count}</span>
           </>
         )}

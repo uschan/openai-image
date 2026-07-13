@@ -1,7 +1,7 @@
 import { Sun, Moon, Cloud, Download } from 'lucide-react';
 
 interface HeaderProps {
-  apiHealth: { gemini: boolean; apimart: boolean; deepseek: boolean };
+  apiHealth: { gemini: boolean; apimart: boolean; apikeyfun: boolean; deepseek: boolean };
   activeTab: string;
   setActiveTab: (tab: 'workspace' | 'assets' | 'models' | 'history') => void;
   theme: string;
@@ -40,6 +40,7 @@ export function Header({ apiHealth, activeTab, setActiveTab, theme, setTheme, on
         <div className="hidden lg:flex items-center gap-3 mr-4 text-[9px] font-mono uppercase bg-black/20 px-3 py-1.5 rounded-full border border-white/5">
           <Indicator label="Gemini" ok={apiHealth.gemini} />
           <Indicator label="Apimart" ok={apiHealth.apimart} />
+          <Indicator label="apikey.fun" ok={apiHealth.apikeyfun} />
           <Indicator label="DeepSeek" ok={apiHealth.deepseek} />
         </div>
 

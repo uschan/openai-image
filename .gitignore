@@ -10,3 +10,9 @@ data.json
 *.bak
 *.tmp
 apimart/
+atlas.db
+atlas.db-shm
+atlas.db-wal
+migration-report.json
+backups/
+cache/

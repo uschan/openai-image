@@ -1,11 +1,9 @@
-import type { GeneratedImage } from '../types';
-
 interface HistoryTabProps {
   generationStats: { totalAttempts: number; successful: number; failed: number };
-  images: GeneratedImage[];
+  archivedCount: number;
 }
 
-export function HistoryTab({ generationStats, images }: HistoryTabProps) {
+export function HistoryTab({ generationStats, archivedCount }: HistoryTabProps) {
   return (
     <main className="flex-1 overflow-y-auto px-10 py-12 custom-scrollbar bg-editorial-800">
       <div className="max-w-4xl mx-auto space-y-10">
@@ -18,7 +16,7 @@ export function HistoryTab({ generationStats, images }: HistoryTabProps) {
             { label: "Total Attempts", value: generationStats.totalAttempts },
             { label: "Successful (Consumed)", value: generationStats.successful },
             { label: "Failed", value: generationStats.failed },
-            { label: "Archived", value: images.filter(i => i.isSaved).length },
+            { label: "Archived", value: archivedCount },
           ].map((stat, idx) => (
             <div key={idx} className="glass p-6 rounded-2xl flex flex-col gap-2">
               <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">{stat.label}</span>
